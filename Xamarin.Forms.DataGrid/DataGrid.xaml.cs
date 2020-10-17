@@ -471,11 +471,7 @@ namespace Xamarin.Forms.DataGrid
 
 		#region ctor
 
-		public DataGrid() : this(ListViewCachingStrategy.RecycleElement)
-		{
-		}
-
-		public DataGrid(ListViewCachingStrategy cachingStrategy)
+		public DataGrid()
 		{
 			InitializeComponent();
 
