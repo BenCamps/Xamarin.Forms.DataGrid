@@ -127,7 +127,10 @@
 		protected override void OnBindingContextChanged()
 		{
 			base.OnBindingContextChanged();
-			UpdateBackgroundColor();
+
+			RowContext = BindingContext;
+			//if (BindingContext == RowContext)
+			//	UpdateBackgroundColor();
 		}
 
 		protected override void OnParentSet()
