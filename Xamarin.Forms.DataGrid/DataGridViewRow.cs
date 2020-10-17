@@ -1,6 +1,6 @@
 ﻿namespace Xamarin.Forms.DataGrid
 {
-	internal sealed class DataGridViewCell : ViewCell
+	internal sealed class DataGridViewRow : ViewCell
 	{
 		#region Fields
 		Grid _mainLayout;
@@ -31,23 +31,21 @@
 
 		#region Bindable Properties
 		public static readonly BindableProperty DataGridProperty =
-			BindableProperty.Create(nameof(DataGrid), typeof(DataGrid), typeof(DataGridViewCell), null,
-				propertyChanged: (b, o, n) => (b as DataGridViewCell).CreateView());
+			BindableProperty.Create(nameof(DataGrid), typeof(DataGrid), typeof(DataGridViewRow), null,
+				propertyChanged: (b, o, n) => (b as DataGridViewRow).CreateView());
 
 		public static readonly BindableProperty IndexProperty =
-			BindableProperty.Create(nameof(Index), typeof(int), typeof(DataGridViewCell), 0,
-				propertyChanged: (b, o, n) => (b as DataGridViewCell).UpdateBackgroundColor());
+			BindableProperty.Create(nameof(Index), typeof(int), typeof(DataGridViewRow), 0,
+				propertyChanged: (b, o, n) => (b as DataGridViewRow).UpdateBackgroundColor());
 
 		public static readonly BindableProperty RowContextProperty =
-			BindableProperty.Create(nameof(RowContext), typeof(object), typeof(DataGridViewCell),
-				propertyChanged: (b, o, n) => (b as DataGridViewCell).UpdateBackgroundColor());
+			BindableProperty.Create(nameof(RowContext), typeof(object), typeof(DataGridViewRow),
+				propertyChanged: (b, o, n) => (b as DataGridViewRow).UpdateBackgroundColor());
 		#endregion
 
 		#region Methods
 		private void CreateView()
 		{
-			UpdateBackgroundColor();
-
 			_mainLayout = new Grid()
 			{
 				BackgroundColor = DataGrid.BorderColor,
@@ -96,18 +94,20 @@
 				_mainLayout.Children.Add(cell);
 			}
 
+			UpdateBackgroundColor();
+
 			View = _mainLayout;
 		}
 
 		private void UpdateBackgroundColor()
 		{
 			_hasSelected = DataGrid.SelectedItem == RowContext;
-			int actualIndex = DataGrid?.InternalItems?.IndexOf(BindingContext) ?? -1;
+			int actualIndex = DataGrid?.InternalItems?.IndexOf(RowContext) ?? -1;
 			if (actualIndex > -1)
 			{
 				_bgColor = (DataGrid.SelectionEnabled && DataGrid.SelectedItem != null && DataGrid.SelectedItem == RowContext) ?
-					DataGrid.ActiveRowColor : DataGrid.RowsBackgroundColorPalette.GetColor(actualIndex, BindingContext);
-				_textColor = DataGrid.RowsTextColorPalette.GetColor(actualIndex, BindingContext);
+					DataGrid.ActiveRowColor : DataGrid.RowsBackgroundColorPalette.GetColor(actualIndex, RowContext);
+				_textColor = DataGrid.RowsTextColorPalette.GetColor(actualIndex, RowContext);
 
 				ChangeColor(_bgColor);
 			}
@@ -129,8 +129,6 @@
 			base.OnBindingContextChanged();
 
 			RowContext = BindingContext;
-			//if (BindingContext == RowContext)
-			//	UpdateBackgroundColor();
 		}
 
 		protected override void OnParentSet()
