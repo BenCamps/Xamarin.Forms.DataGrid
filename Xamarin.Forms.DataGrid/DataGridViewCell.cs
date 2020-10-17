@@ -68,7 +68,7 @@
 					if (col.PropertyName != null)
 					{
 						cell.SetBinding(BindingContextProperty,
-							new Binding(col.PropertyName, source: RowContext));
+							new Binding(col.PropertyName, source: RowContext, converter: col.PropertyConverter, converterParameter: col.PropertyConverterParameter));
 					}
 				}
 				else
@@ -80,7 +80,7 @@
 						VerticalOptions = col.VerticalContentAlignment,
 						LineBreakMode = LineBreakMode.WordWrap,
 					};
-					text.SetBinding(Label.TextProperty, new Binding(col.PropertyName, BindingMode.Default, stringFormat: col.StringFormat));
+					text.SetBinding(Label.TextProperty, new Binding(col.PropertyName, BindingMode.Default, stringFormat: col.StringFormat, converter: col.PropertyConverter, converterParameter: col.PropertyConverterParameter));
 					text.SetBinding(Label.FontSizeProperty, new Binding(DataGrid.FontSizeProperty.PropertyName, BindingMode.Default, source: DataGrid));
 					text.SetBinding(Label.FontFamilyProperty, new Binding(DataGrid.FontFamilyProperty.PropertyName, BindingMode.Default, source: DataGrid));
 
@@ -92,8 +92,8 @@
 					};
 				}
 
-				_mainLayout.Children.Add(cell);
 				Grid.SetColumn(cell, DataGrid.Columns.IndexOf(col));
+				_mainLayout.Children.Add(cell);
 			}
 
 			View = _mainLayout;

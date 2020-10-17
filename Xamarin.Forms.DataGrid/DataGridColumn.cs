@@ -20,6 +20,12 @@ namespace Xamarin.Forms.DataGrid
 		public static readonly BindableProperty PropertyNameProperty =
 			BindableProperty.Create(nameof(PropertyName), typeof(string), typeof(DataGridColumn), null);
 
+		public static readonly BindableProperty PropertyConverterProperty =
+			BindableProperty.Create(nameof(PropertyConverter), typeof(IValueConverter), typeof(DataGridColumn), null);
+
+		public static readonly BindableProperty PropertyConverterParameterProperty =
+			BindableProperty.Create(nameof(PropertyConverterParameter), typeof(object), typeof(DataGridColumn), null);
+
 		public static readonly BindableProperty StringFormatProperty =
 			BindableProperty.Create(nameof(StringFormat), typeof(string), typeof(DataGridColumn), null);
 
@@ -37,7 +43,8 @@ namespace Xamarin.Forms.DataGrid
 
 		public static readonly BindableProperty HeaderLabelStyleProperty =
 			BindableProperty.Create(nameof(HeaderLabelStyle), typeof(Style), typeof(DataGridColumn),
-				propertyChanged: (b, o, n) => {
+				propertyChanged: (b, o, n) =>
+				{
 					if ((b as DataGridColumn).HeaderLabel != null && (o != n))
 						(b as DataGridColumn).HeaderLabel.Style = n as Style;
 				});
@@ -63,10 +70,23 @@ namespace Xamarin.Forms.DataGrid
 			get { return (string)GetValue(FormattedTitleProperty); }
 			set { SetValue(FormattedTitleProperty, value); }
 		}
+
 		public string PropertyName
 		{
 			get { return (string)GetValue(PropertyNameProperty); }
 			set { SetValue(PropertyNameProperty, value); }
+		}
+
+		public IValueConverter PropertyConverter
+		{
+			get { return (IValueConverter)GetValue(PropertyConverterProperty); }
+			set { SetValue(PropertyConverterProperty, value); }
+		}
+
+		public object PropertyConverterParameter
+		{
+			get { return (object)GetValue(PropertyConverterParameterProperty); }
+			set { SetValue(PropertyConverterParameterProperty, value); }
 		}
 
 		public string StringFormat
