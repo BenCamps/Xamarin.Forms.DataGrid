@@ -20,7 +20,8 @@ namespace Xamarin.Forms.DataGrid
 		#region Bindable properties
 		public static readonly BindableProperty ActiveRowColorProperty =
 			BindableProperty.Create(nameof(ActiveRowColor), typeof(Color), typeof(DataGrid), Color.FromRgb(128, 144, 160),
-				coerceValue: (b, v) => {
+				coerceValue: (b, v) =>
+				{
 					if (!(b as DataGrid).SelectionEnabled)
 						throw new InvalidOperationException("Datagrid must be SelectionEnabled=true to set ActiveRowColor");
 					return v;
@@ -28,7 +29,8 @@ namespace Xamarin.Forms.DataGrid
 
 		public static readonly BindableProperty HeaderBackgroundProperty =
 			BindableProperty.Create(nameof(HeaderBackground), typeof(Color), typeof(DataGrid), Color.White,
-				propertyChanged: (b, o, n) => {
+				propertyChanged: (b, o, n) =>
+				{
 					var self = b as DataGrid;
 					if (self._headerView != null && !self.HeaderBordersVisible)
 						self._headerView.BackgroundColor = (Color)n;
@@ -36,7 +38,8 @@ namespace Xamarin.Forms.DataGrid
 
 		public static readonly BindableProperty BorderColorProperty =
 			BindableProperty.Create(nameof(BorderColor), typeof(Color), typeof(DataGrid), Color.Black,
-				propertyChanged: (b, o, n) => {
+				propertyChanged: (b, o, n) =>
+				{
 					var self = b as DataGrid;
 					if (self.HeaderBordersVisible)
 						self._headerView.BackgroundColor = (Color)n;
@@ -47,7 +50,8 @@ namespace Xamarin.Forms.DataGrid
 
 		public static readonly BindableProperty RowsBackgroundColorPaletteProperty =
 			BindableProperty.Create(nameof(RowsBackgroundColorPalette), typeof(IColorProvider), typeof(DataGrid), new PaletteCollection { default(Color) },
-				propertyChanged: (b, o, n) => {
+				propertyChanged: (b, o, n) =>
+				{
 					var self = b as DataGrid;
 					if (self.Columns != null && self.ItemsSource != null)
 						self.Reload();
@@ -55,7 +59,8 @@ namespace Xamarin.Forms.DataGrid
 
 		public static readonly BindableProperty RowsTextColorPaletteProperty =
 			BindableProperty.Create(nameof(RowsTextColorPalette), typeof(IColorProvider), typeof(DataGrid), new PaletteCollection { Color.Black },
-				propertyChanged: (b, o, n) => {
+				propertyChanged: (b, o, n) =>
+				{
 					var self = b as DataGrid;
 					if (self.Columns != null && self.ItemsSource != null)
 						self.Reload();
@@ -69,7 +74,8 @@ namespace Xamarin.Forms.DataGrid
 
 		public static readonly BindableProperty ItemsSourceProperty =
 			BindableProperty.Create(nameof(ItemsSource), typeof(IEnumerable), typeof(DataGrid), null,
-				propertyChanged: (b, o, n) => {
+				propertyChanged: (b, o, n) =>
+				{
 					DataGrid self = b as DataGrid;
 					//ObservableCollection Tracking 
 					if (o != null && o is INotifyCollectionChanged)
@@ -104,15 +110,18 @@ namespace Xamarin.Forms.DataGrid
 
 		public static readonly BindableProperty RowHeightProperty =
 			BindableProperty.Create(nameof(RowHeight), typeof(int), typeof(DataGrid), 40,
-				propertyChanged: (b, o, n) => {
+				propertyChanged: (b, o, n) =>
+				{
 					var self = b as DataGrid;
-					self._listView.RowHeight = (int)n;
+					//self._listView.RowHeight = (int)n;
+					//todo:add RowHeight binding to DataGridViewRow
 				});
 
 
 		public static readonly BindableProperty HeaderHeightProperty =
 			BindableProperty.Create(nameof(HeaderHeight), typeof(int), typeof(DataGrid), 40,
-				propertyChanged: (b, o, n) => {
+				propertyChanged: (b, o, n) =>
+				{
 					var self = b as DataGrid;
 					self._headerView.HeightRequest = (int)n;
 				});
@@ -128,7 +137,8 @@ namespace Xamarin.Forms.DataGrid
 
 		public static readonly BindableProperty SelectedItemProperty =
 			BindableProperty.Create(nameof(SelectedItem), typeof(object), typeof(DataGrid), null, BindingMode.TwoWay,
-				coerceValue: (b, v) => {
+				coerceValue: (b, v) =>
+				{
 					var self = b as DataGrid;
 					if (!self.SelectionEnabled && v != null)
 						throw new InvalidOperationException("Datagrid must be SelectionEnabled=true to set SelectedItem");
@@ -137,16 +147,20 @@ namespace Xamarin.Forms.DataGrid
 					else
 						return null;
 				},
-				propertyChanged: (b, o, n) => {
+				propertyChanged: (b, o, n) =>
+				{
 					var self = b as DataGrid;
-					if (self._listView.SelectedItem != n)
-						self._listView.SelectedItem = n;
+					//if (self._listView.SelectedItem != n)
+					//	self._listView.SelectedItem = n;
+					if (self._table.SelectedItem != n)
+						self._table.SelectedItem = n;
 				}
 			);
 
 		public static readonly BindableProperty SelectionEnabledProperty =
 			BindableProperty.Create(nameof(SelectionEnabled), typeof(bool), typeof(DataGrid), true,
-				propertyChanged: (b, o, n) => {
+				propertyChanged: (b, o, n) =>
+				{
 					var self = b as DataGrid;
 					if (!self.SelectionEnabled && self.SelectedItem != null)
 						self.SelectedItem = null;
@@ -154,27 +168,32 @@ namespace Xamarin.Forms.DataGrid
 
 		public static readonly BindableProperty PullToRefreshCommandProperty =
 			BindableProperty.Create(nameof(PullToRefreshCommand), typeof(ICommand), typeof(DataGrid), null,
-				propertyChanged: (b, o, n) => {
+				propertyChanged: (b, o, n) =>
+				{
 					var self = b as DataGrid;
-					if (n == null)
-					{
-						self._listView.IsPullToRefreshEnabled = false;
-						self._listView.RefreshCommand = null;
-					}
-					else
-					{
-						self._listView.IsPullToRefreshEnabled = true;
-						self._listView.RefreshCommand = n as ICommand;
-					}
+					//if (n == null)
+					//{
+					//	self._listView.IsPullToRefreshEnabled = false;
+					//	self._listView.RefreshCommand = null;
+					//}
+					//else
+					//{
+					//	self._listView.IsPullToRefreshEnabled = true;
+					//	self._listView.RefreshCommand = n as ICommand;
+					//}
+					//todo: add above bindings to RefreshView
 				});
 
 		public static readonly BindableProperty IsRefreshingProperty =
 			BindableProperty.Create(nameof(IsRefreshing), typeof(bool), typeof(DataGrid), false, BindingMode.TwoWay,
-				propertyChanged: (b, o, n) => (b as DataGrid)._listView.IsRefreshing = (bool)n);
+				propertyChanged: (b, o, n) => { });
+		//(b as DataGrid)._listView.IsRefreshing = (bool)n);
+		//todo: add above binding to RefreshView
 
 		public static readonly BindableProperty BorderThicknessProperty =
 			BindableProperty.Create(nameof(BorderThickness), typeof(Thickness), typeof(DataGrid), new Thickness(1),
-				propertyChanged: (b, o, n) => {
+				propertyChanged: (b, o, n) =>
+				{
 					(b as DataGrid)._headerView.ColumnSpacing = ((Thickness)n).HorizontalThickness / 2;
 					(b as DataGrid)._headerView.Padding = ((Thickness)n).HorizontalThickness / 2;
 				});
@@ -185,7 +204,8 @@ namespace Xamarin.Forms.DataGrid
 
 		public static readonly BindableProperty SortedColumnIndexProperty =
 			BindableProperty.Create(nameof(SortedColumnIndex), typeof(SortData), typeof(DataGrid), null, BindingMode.TwoWay,
-				validateValue: (b, v) => {
+				validateValue: (b, v) =>
+				{
 					var self = b as DataGrid;
 					var sData = (SortData)v;
 
@@ -195,7 +215,8 @@ namespace Xamarin.Forms.DataGrid
 						self.Columns.Count == 0 || //columns not setted yet
 						(sData.Index < self.Columns.Count && self.Columns.ElementAt(sData.Index).SortingEnabled);
 				},
-				propertyChanged: (b, o, n) => {
+				propertyChanged: (b, o, n) =>
+				{
 					var self = b as DataGrid;
 					if (o != n)
 						self.SortItems((SortData)n);
@@ -214,7 +235,8 @@ namespace Xamarin.Forms.DataGrid
 		public static readonly BindableProperty DescendingIconStyleProperty =
 			BindableProperty.Create(nameof(DescendingIconStyle), typeof(Style), typeof(DataGrid), null,
 
-				propertyChanged: (b, o, n) => {
+				propertyChanged: (b, o, n) =>
+				{
 					var self = b as DataGrid;
 					var style = (n as Style).Setters.FirstOrDefault(x => x.Property == Image.SourceProperty);
 					if (style != null)
@@ -228,13 +250,15 @@ namespace Xamarin.Forms.DataGrid
 
 		public static readonly BindableProperty AscendingIconStyleProperty =
 			BindableProperty.Create(nameof(AscendingIconStyle), typeof(Style), typeof(DataGrid), null,
-				coerceValue: (b, v) => {
+				coerceValue: (b, v) =>
+				{
 					var self = b as DataGrid;
 
 					return v;
 				},
 
-				propertyChanged: (b, o, n) => {
+				propertyChanged: (b, o, n) =>
+				{
 					var self = b as DataGrid;
 					if ((n as Style).Setters.Any(x => x.Property == Image.SourceProperty))
 					{
@@ -251,7 +275,8 @@ namespace Xamarin.Forms.DataGrid
 
 		public static readonly BindableProperty NoDataViewProperty =
 			BindableProperty.Create(nameof(NoDataView), typeof(View), typeof(DataGrid),
-				propertyChanged: (b, o, n) => {
+				propertyChanged: (b, o, n) =>
+				{
 					if (o != n)
 						(b as DataGrid)._noDataView.Content = n as View;
 				});
@@ -312,7 +337,8 @@ namespace Xamarin.Forms.DataGrid
 				if (IsSortable && SortedColumnIndex != null)
 					SortItems(SortedColumnIndex);
 				else
-					_listView.ItemsSource = _internalItems;
+					//_listView.ItemsSource = _internalItems;
+					_table.ItemsSource = _internalItems;
 			}
 		}
 
@@ -439,7 +465,8 @@ namespace Xamarin.Forms.DataGrid
 
 		#region Fields
 		Dictionary<int, SortingOrder> _sortingOrders;
-		ListView _listView;
+		//		ListView _listView;
+		CollectionView _table;
 		#endregion
 
 		#region ctor
@@ -454,28 +481,56 @@ namespace Xamarin.Forms.DataGrid
 
 			_sortingOrders = new Dictionary<int, SortingOrder>();
 
-			_listView = new ListView(cachingStrategy) {
-				BackgroundColor = Color.Transparent,
+			//_listView = new ListView(cachingStrategy) {
+			//	BackgroundColor = Color.Transparent,
+			//	ItemTemplate = new DataGridRowTemplateSelector(),
+			//	SeparatorVisibility = SeparatorVisibility.None,
+			//};
+
+			_table = new CollectionView
+			{
+				BackgroundColor = Color.Red,//Color.Transparent,
 				ItemTemplate = new DataGridRowTemplateSelector(),
-				SeparatorVisibility = SeparatorVisibility.None,
+				SelectionMode = SelectionMode.Single,
+				ItemSizingStrategy = ItemSizingStrategy.MeasureFirstItem,
 			};
 
-			_listView.ItemSelected += (s, e) => {
+
+			//_listView.ItemSelected += (s, e) => {
+			//	if (SelectionEnabled)
+			//		SelectedItem = _listView.SelectedItem;
+			//	else
+			//		_listView.SelectedItem = null;
+
+			//	ItemSelected?.Invoke(this, e);
+			//};
+
+			_table.SelectionChanged += (s, e) =>
+			{
 				if (SelectionEnabled)
-					SelectedItem = _listView.SelectedItem;
+					SelectedItem = _table.SelectedItem;
 				else
-					_listView.SelectedItem = null;
+					_table.SelectedItem = null;
 
-				ItemSelected?.Invoke(this, e);
+				var ee = new SelectedItemChangedEventArgs(_table.SelectedItem);
+				//todo: change ItemSelected event type to match e
+				ItemSelected?.Invoke(this, ee);
 			};
 
-			_listView.Refreshing += (s, e) => {
-				Refreshing?.Invoke(this, e);
-			};
+			//_listView.Refreshing += (s, e) => {
+			//	Refreshing?.Invoke(this, e);
+			//};
 
-			_listView.SetBinding(ListView.RowHeightProperty, new Binding("RowHeight", source: this));
-			Grid.SetRow(_listView, 1);
-			Children.Add(_listView);
+			//todo: put table inside a RefreshView to enable pull to refresh
+
+			//_listView.SetBinding(ListView.RowHeightProperty, new Binding("RowHeight", source: this));
+			//todo: Bind RowHeight propety to DataGridViewRow so it can inform the ItemSizingStrategy
+
+			//Grid.SetRow(_listView, 1);
+			//Children.Add(_listView);
+
+			Grid.SetRow(_table, 1);
+			Children.Add(_table);
 		}
 		#endregion
 
@@ -504,7 +559,8 @@ namespace Xamarin.Forms.DataGrid
 		{
 			column.HeaderLabel.Style = column.HeaderLabelStyle ?? this.HeaderLabelStyle ?? (Style)_headerView.Resources["HeaderDefaultStyle"];
 
-			Grid grid = new Grid {
+			Grid grid = new Grid
+			{
 				ColumnSpacing = 0,
 			};
 
@@ -519,7 +575,8 @@ namespace Xamarin.Forms.DataGrid
 				Grid.SetColumn(column.SortingIcon, 1);
 
 				TapGestureRecognizer tgr = new TapGestureRecognizer();
-				tgr.Tapped += (s, e) => {
+				tgr.Tapped += (s, e) =>
+				{
 					int index = Columns.IndexOf(column);
 					SortingOrder order = _sortingOrders[index] == SortingOrder.Ascendant ? SortingOrder.Descendant : SortingOrder.Ascendant;
 
@@ -619,15 +676,17 @@ namespace Xamarin.Forms.DataGrid
 			_sortingOrders[sData.Index] = order;
 			SortedColumnIndex = sData;
 
-			_listView.ItemsSource = _internalItems;
+			//_listView.ItemsSource = _internalItems;
+			_table.ItemsSource = _internalItems;
 		}
-        #endregion
+		#endregion
 
-        #region Methods
-        public void ScrollTo(object item, ScrollToPosition position, bool animated = true)
-        {
-			_listView.ScrollTo(item, position, animated);
-        }
-        #endregion
-    }
+		#region Methods
+		public void ScrollTo(object item, ScrollToPosition position, bool animated = true)
+		{
+			//_listView.ScrollTo(item, position, animated);
+			_table.ScrollTo(item, position: position, animate: animated);
+		}
+		#endregion
+	}
 }

@@ -1,6 +1,6 @@
 ﻿namespace Xamarin.Forms.DataGrid
 {
-	internal sealed class DataGridViewRow : ViewCell
+	internal sealed class DataGridViewRow : Grid
 	{
 		#region Fields
 		Grid _mainLayout;
@@ -8,6 +8,13 @@
 		Color _textColor;
 		bool _hasSelected;
 		#endregion
+
+
+		public DataGridViewRow()
+		{
+			_mainLayout = this;
+		}
+
 
 		#region properties
 		public DataGrid DataGrid
@@ -46,14 +53,16 @@
 		#region Methods
 		private void CreateView()
 		{
-			_mainLayout = new Grid()
-			{
-				BackgroundColor = DataGrid.BorderColor,
-				RowSpacing = 0,
-				ColumnSpacing = DataGrid.BorderThickness.HorizontalThickness / 2,
-				Padding = new Thickness(DataGrid.BorderThickness.HorizontalThickness / 2,
-										DataGrid.BorderThickness.VerticalThickness / 2),
-			};
+			//			_mainLayout = new Grid()
+			//			{
+			BackgroundColor = DataGrid.BorderColor;
+			RowSpacing = 0;
+			ColumnSpacing = DataGrid.BorderThickness.HorizontalThickness / 2;
+			Padding = new Thickness(DataGrid.BorderThickness.HorizontalThickness / 2,
+									DataGrid.BorderThickness.VerticalThickness / 2);
+			//			};
+
+			HeightRequest = DataGrid.RowHeight;
 
 			foreach (var col in DataGrid.Columns)
 			{
@@ -96,7 +105,7 @@
 
 			UpdateBackgroundColor();
 
-			View = _mainLayout;
+			//View = _mainLayout;
 		}
 
 		private void UpdateBackgroundColor()
@@ -148,5 +157,18 @@
 			}
 		}
 		#endregion
+
+
+		protected override void OnChildAdded(Element child)
+		{
+			base.OnChildAdded(child);
+
+			var c = (VisualElement)child;
+
+			//don't listen to cells measure invalidation to reduce layout calls
+			c.MeasureInvalidated -= this.OnChildMeasureInvalidated;
+		}
+
+
 	}
 }
