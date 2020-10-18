@@ -204,6 +204,11 @@ namespace Xamarin.Forms.DataGrid
 				DataGrid.ItemSelected += DataGrid_ItemSelected;
 			else
 				DataGrid.ItemSelected -= DataGrid_ItemSelected;
+			
+			if (Parent != null)
+				DataGrid.AddAttachedRow(this);
+			else
+				DataGrid.RemoveAttachedRow(this);
 		}
 
 		private void DataGrid_ItemSelected(object sender, SelectedItemChangedEventArgs e)
