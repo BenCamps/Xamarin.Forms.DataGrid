@@ -12,7 +12,7 @@ using Xamarin.Forms.DataGrid.Utils;
 namespace Xamarin.Forms.DataGrid
 {
 	[Xaml.XamlCompilation(Xaml.XamlCompilationOptions.Compile)]
-	public partial class DataGrid : Grid
+	public partial class DataGrid : ScrollView
 	{
 		public event EventHandler Refreshing;
 		public event EventHandler<SelectedItemChangedEventArgs> ItemSelected;
@@ -456,14 +456,15 @@ namespace Xamarin.Forms.DataGrid
 
 		#region Fields
 
-		private readonly Dictionary<int, SortingOrder> _sortingOrders;
-		//		ListView _listView;
-
 		private readonly RefreshView _refreshView;
 		private readonly CollectionView _table;
+
+		private readonly Dictionary<int, SortingOrder> _sortingOrders;
+		
 		private readonly IList<double> _computedColumnWidths;
 		private readonly IList<double> _computedColumnStarts;
 		private readonly IList<DataGridViewRow> _attachedRows;
+
 		#endregion
 
 		#region ctor
@@ -525,8 +526,7 @@ namespace Xamarin.Forms.DataGrid
 				//todo: change ItemSelected event type to match e
 				ItemSelected?.Invoke(this, ee);
 			};
-
-
+			
 
 			_refreshView = new RefreshView();
 
@@ -539,18 +539,17 @@ namespace Xamarin.Forms.DataGrid
 			_refreshView.SetBinding(RefreshView.CommandProperty, new Binding(nameof(RefreshCommand), BindingMode.OneWay, source: this));
 			_refreshView.SetBinding(RefreshView.IsRefreshingProperty, new Binding(nameof(IsRefreshing), BindingMode.TwoWay, source: this));
 
-
 			_refreshView.Content = _table;
 
 
 			//_listView.SetBinding(ListView.RowHeightProperty, new Binding("RowHeight", source: this));
 			//todo: Bind RowHeight propety to DataGridViewRow so it can inform the ItemSizingStrategy
-
-			//Grid.SetRow(_listView, 1);
-			//Children.Add(_listView);
-
+			
 			Grid.SetRow(_refreshView, 1);
-			Children.Add(_refreshView);
+			container.Children.Add(_refreshView);
+			
+			//listen to scrolled event to handle frozen column
+			Scrolled += OnScrolled;
 		}
 		#endregion
 
@@ -734,8 +733,13 @@ namespace Xamarin.Forms.DataGrid
 		{
 			if (_attachedRows.Contains(row))
 				_attachedRows.Remove(row);
+			
 		}
-		
+
+		private void OnScrolled(object sender, ScrolledEventArgs e)
+		{
+		}
+
 		#endregion
 	}
 }
