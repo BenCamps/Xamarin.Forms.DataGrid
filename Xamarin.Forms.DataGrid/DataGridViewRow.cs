@@ -228,7 +228,11 @@ namespace Xamarin.Forms.DataGrid
 			var c = (VisualElement)child;
 
 			//don't listen to cells measure invalidation to reduce layout calls
-			c.MeasureInvalidated -= this.OnChildMeasureInvalidated;
+			//defer the call because the event is hooked AFTER this method returns
+			Device.BeginInvokeOnMainThread(() =>
+			{
+				c.MeasureInvalidated -= this.OnChildMeasureInvalidated;
+			});
 		}
 
 
