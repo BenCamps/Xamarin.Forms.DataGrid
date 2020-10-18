@@ -12,17 +12,26 @@
 		protected override DataTemplate OnSelectTemplate(object item, BindableObject container)
 		{
 			var listView = container as View;
-			//todo: update Parent lookup after adding RefreshView and ScrollView as containers of CollectionView
-			var dataGrid = listView.Parent as DataGrid;
+			var dataGrid = GetDataGridParentOf(listView);
 			var items = dataGrid.InternalItems;
 
 			_dataGridRowTemplate.SetValue(DataGridViewRow.DataGridProperty, dataGrid);
-			_dataGridRowTemplate.SetValue(DataGridViewRow.RowContextProperty, item);
 
 			if (items != null)
 				_dataGridRowTemplate.SetValue(DataGridViewRow.IndexProperty, items.IndexOf(item));
 
 			return _dataGridRowTemplate;
+		}
+
+
+		private DataGrid GetDataGridParentOf(VisualElement v)
+		{
+			Element p = v;
+
+			while (p != null && !(p is DataGrid))
+				p = p.Parent;
+
+			return (DataGrid)p;
 		}
 	}
 }
