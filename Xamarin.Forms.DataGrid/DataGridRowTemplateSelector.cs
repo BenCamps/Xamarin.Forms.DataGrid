@@ -13,12 +13,8 @@
 		{
 			var listView = container as View;
 			var dataGrid = GetDataGridParentOf(listView);
-			var items = dataGrid.InternalItems;
 
 			_dataGridRowTemplate.SetValue(DataGridViewRow.DataGridProperty, dataGrid);
-
-			if (items != null)
-				_dataGridRowTemplate.SetValue(DataGridViewRow.IndexProperty, items.IndexOf(item));
 
 			return _dataGridRowTemplate;
 		}

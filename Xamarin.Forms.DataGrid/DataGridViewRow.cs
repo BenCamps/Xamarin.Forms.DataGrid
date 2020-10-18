@@ -22,20 +22,16 @@ namespace Xamarin.Forms.DataGrid
 		#region properties
 		public DataGrid DataGrid
 		{
-			get { return (DataGrid)GetValue(DataGridProperty); }
-			set { SetValue(DataGridProperty, value); }
+			get => (DataGrid)GetValue(DataGridProperty);
+			set => SetValue(DataGridProperty, value);
 		}
 
-		public int Index
-		{
-			get { return (int)GetValue(IndexProperty); }
-			set { SetValue(IndexProperty, value); }
-		}
+		public int Index => RowContext != null ? DataGrid.InternalItems?.IndexOf(RowContext) ?? -1 : -1;
 
 		public object RowContext
 		{
-			get { return GetValue(RowContextProperty); }
-			set { SetValue(RowContextProperty, value); }
+			get => GetValue(RowContextProperty);
+			set => SetValue(RowContextProperty, value);
 		}
 		#endregion
 
@@ -43,10 +39,6 @@ namespace Xamarin.Forms.DataGrid
 		public static readonly BindableProperty DataGridProperty =
 			BindableProperty.Create(nameof(DataGrid), typeof(DataGrid), typeof(DataGridViewRow), null,
 				propertyChanged: (b, o, n) => (b as DataGridViewRow).CreateView());
-
-		public static readonly BindableProperty IndexProperty =
-			BindableProperty.Create(nameof(Index), typeof(int), typeof(DataGridViewRow), 0,
-				propertyChanged: (b, o, n) => (b as DataGridViewRow).InvalidateBackground());
 
 		public static readonly BindableProperty RowContextProperty =
 			BindableProperty.Create(nameof(RowContext), typeof(object), typeof(DataGridViewRow),
