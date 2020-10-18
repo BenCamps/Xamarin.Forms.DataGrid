@@ -1,9 +1,12 @@
-﻿namespace Xamarin.Forms.DataGrid
+﻿using System;
+using System.Threading.Tasks;
+
+namespace Xamarin.Forms.DataGrid
 {
-	internal sealed class DataGridViewRow : Grid
+	internal sealed class DataGridViewRow : Layout<View>
 	{
 		#region Fields
-		Grid _mainLayout;
+		Layout<View> _mainLayout;
 		Color _bgColor;
 		Color _textColor;
 		bool _hasSelected;
@@ -43,30 +46,63 @@
 
 		public static readonly BindableProperty IndexProperty =
 			BindableProperty.Create(nameof(Index), typeof(int), typeof(DataGridViewRow), 0,
-				propertyChanged: (b, o, n) => (b as DataGridViewRow).UpdateBackgroundColor());
+				propertyChanged: (b, o, n) => (b as DataGridViewRow).InvalidateBackground());
 
 		public static readonly BindableProperty RowContextProperty =
 			BindableProperty.Create(nameof(RowContext), typeof(object), typeof(DataGridViewRow),
-				propertyChanged: (b, o, n) => (b as DataGridViewRow).UpdateBackgroundColor());
+				propertyChanged: (b, o, n) => (b as DataGridViewRow).InvalidateBackground());
 		#endregion
+
+
+		#region Layout impl
+		protected override bool ShouldInvalidateOnChildAdded(View child)
+		{
+			return false;
+		}
+
+		protected override bool ShouldInvalidateOnChildRemoved(View child)
+		{
+			return false;
+		}
+
+		protected override void LayoutChildren(double x, double y, double width, double height)
+		{
+			var g = DataGrid;
+			var t = g.BorderThickness;
+
+			var cy = t.Top;
+			var ch = g.RowHeight - t.VerticalThickness;
+
+			var i = 0;
+
+			foreach (var c in Children)
+			{
+				if (!c.IsVisible)
+					continue;
+
+				var cw = g.GetComputedColumnWidth(i);
+				var cx = g.GetComputedColumnStart(i) - t.Left;
+
+				var r = new Rectangle(cx, cy, cw, ch);
+
+				if (c.Width != cw || c.Height != ch)
+					c.Layout(r);
+
+				i++;
+			}
+		}
+		#endregion
+
 
 		#region Methods
 		private void CreateView()
 		{
-			//			_mainLayout = new Grid()
-			//			{
 			BackgroundColor = DataGrid.BorderColor;
-			RowSpacing = 0;
-			ColumnSpacing = DataGrid.BorderThickness.HorizontalThickness / 2;
-			Padding = new Thickness(DataGrid.BorderThickness.HorizontalThickness / 2,
-									DataGrid.BorderThickness.VerticalThickness / 2);
-			//			};
 
 			HeightRequest = DataGrid.RowHeight;
 
 			foreach (var col in DataGrid.Columns)
 			{
-				_mainLayout.ColumnDefinitions.Add(new ColumnDefinition() { Width = col.Width });
 				View cell;
 
 				if (col.CellTemplate != null)
@@ -93,23 +129,41 @@
 
 					cell = new ContentView
 					{
-						Padding = 0,
+						Padding = 2,
 						BackgroundColor = _bgColor,
 						Content = text,
 					};
 				}
 
-				Grid.SetColumn(cell, DataGrid.Columns.IndexOf(col));
 				_mainLayout.Children.Add(cell);
 			}
-
-			UpdateBackgroundColor();
-
-			//View = _mainLayout;
 		}
 
+
+		//used to prevent multiple updates when setting RowContext and Index properties
+		private bool updateNeeded;
+
+		private void InvalidateBackground()
+		{
+			if (!updateNeeded)
+			{
+				updateNeeded = true;
+				
+				//defer execution for 10ms until other properties and context have been updated.
+				Action a = async () =>
+				{
+					await Task.Delay(10); 
+					UpdateBackgroundColor();
+				};
+				a.Invoke();
+			}
+		}
+		
 		private void UpdateBackgroundColor()
 		{
+			if (!updateNeeded)
+				return;
+			
 			_hasSelected = DataGrid.SelectedItem == RowContext;
 			int actualIndex = DataGrid?.InternalItems?.IndexOf(RowContext) ?? -1;
 			if (actualIndex > -1)
@@ -119,6 +173,7 @@
 				_textColor = DataGrid.RowsTextColorPalette.GetColor(actualIndex, RowContext);
 
 				ChangeColor(_bgColor);
+				updateNeeded = false;
 			}
 		}
 
@@ -127,9 +182,11 @@
 			foreach (var v in _mainLayout.Children)
 			{
 				v.BackgroundColor = color;
-				var contentView = v as ContentView;
-				if (contentView?.Content is Label)
-					((Label)contentView.Content).TextColor = _textColor;
+
+				if (v is Label label)
+					label.TextColor = _textColor;
+				else if (v is ContentView contentView && contentView.Content is Label label2)
+					label2.TextColor = _textColor;
 			}
 		}
 
@@ -153,7 +210,7 @@
 		{
 			if (DataGrid.SelectionEnabled && (e.SelectedItem == RowContext || _hasSelected))
 			{
-				UpdateBackgroundColor();
+				InvalidateBackground();
 			}
 		}
 		#endregion
