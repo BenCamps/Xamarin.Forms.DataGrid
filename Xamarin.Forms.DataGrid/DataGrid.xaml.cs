@@ -169,29 +169,17 @@ namespace Xamarin.Forms.DataGrid
 						self.SelectedItem = null;
 				});
 
-		public static readonly BindableProperty PullToRefreshCommandProperty =
-			BindableProperty.Create(nameof(PullToRefreshCommand), typeof(ICommand), typeof(DataGrid), null,
+		public static readonly BindableProperty RefreshCommandProperty =
+			BindableProperty.Create(nameof(RefreshCommand), typeof(ICommand), typeof(DataGrid), null,
 				propertyChanged: (b, o, n) =>
 				{
 					var self = b as DataGrid;
-					//if (n == null)
-					//{
-					//	self._listView.IsPullToRefreshEnabled = false;
-					//	self._listView.RefreshCommand = null;
-					//}
-					//else
-					//{
-					//	self._listView.IsPullToRefreshEnabled = true;
-					//	self._listView.RefreshCommand = n as ICommand;
-					//}
-					//todo: add above bindings to RefreshView
+					self._refreshView.IsEnabled = n != null;
 				});
 
 		public static readonly BindableProperty IsRefreshingProperty =
-			BindableProperty.Create(nameof(IsRefreshing), typeof(bool), typeof(DataGrid), false, BindingMode.TwoWay,
-				propertyChanged: (b, o, n) => { });
-		//(b as DataGrid)._listView.IsRefreshing = (bool)n);
-		//todo: add above binding to RefreshView
+			BindableProperty.Create(nameof(IsRefreshing), typeof(bool), typeof(DataGrid), false, BindingMode.TwoWay);
+
 
 		public static readonly BindableProperty BorderThicknessProperty =
 			BindableProperty.Create(nameof(BorderThickness), typeof(Thickness), typeof(DataGrid), new Thickness(1),
@@ -399,10 +387,10 @@ namespace Xamarin.Forms.DataGrid
 			set { SetValue(SelectedItemProperty, value); }
 		}
 
-		public ICommand PullToRefreshCommand
+		public ICommand RefreshCommand
 		{
-			get { return (ICommand)GetValue(PullToRefreshCommandProperty); }
-			set { SetValue(PullToRefreshCommandProperty, value); }
+			get { return (ICommand)GetValue(RefreshCommandProperty); }
+			set { SetValue(RefreshCommandProperty, value); }
 		}
 
 		public bool IsRefreshing
@@ -467,9 +455,14 @@ namespace Xamarin.Forms.DataGrid
 		#endregion
 
 		#region Fields
-		Dictionary<int, SortingOrder> _sortingOrders;
+
+		private readonly Dictionary<int, SortingOrder> _sortingOrders;
 		//		ListView _listView;
-		CollectionView _table;
+
+		private readonly RefreshView _refreshView;
+		private readonly CollectionView _table;
+		private readonly IList<double> _computedColumnWidths;
+		private readonly IList<double> _computedColumnStarts;
 		#endregion
 
 		#region ctor
@@ -479,6 +472,19 @@ namespace Xamarin.Forms.DataGrid
 			InitializeComponent();
 
 			_sortingOrders = new Dictionary<int, SortingOrder>();
+			_computedColumnWidths = new List<double>();
+			_computedColumnStarts = new List<double>();
+			_headerView.LayoutChanged += (s, e) =>
+			{
+				_computedColumnWidths.Clear();
+				_computedColumnStarts.Clear();
+				foreach (var c in _headerView.Children)
+				{
+					_computedColumnWidths.Add(c.Width);
+					_computedColumnStarts.Add(c.X);
+				}
+			};
+
 
 			//_listView = new ListView(cachingStrategy) {
 			//	BackgroundColor = Color.Transparent,
@@ -516,11 +522,22 @@ namespace Xamarin.Forms.DataGrid
 				ItemSelected?.Invoke(this, ee);
 			};
 
-			//_listView.Refreshing += (s, e) => {
-			//	Refreshing?.Invoke(this, e);
-			//};
 
-			//todo: put table inside a RefreshView to enable pull to refresh
+
+			_refreshView = new RefreshView();
+
+			_refreshView.Refreshing += (s, e) =>
+			{
+				Refreshing?.Invoke(this, e);
+			};
+
+			_refreshView.IsEnabled = false;
+			_refreshView.SetBinding(RefreshView.CommandProperty, new Binding(nameof(RefreshCommand), BindingMode.OneWay, source: this));
+			_refreshView.SetBinding(RefreshView.IsRefreshingProperty, new Binding(nameof(IsRefreshing), BindingMode.TwoWay, source: this));
+
+
+			_refreshView.Content = _table;
+
 
 			//_listView.SetBinding(ListView.RowHeightProperty, new Binding("RowHeight", source: this));
 			//todo: Bind RowHeight propety to DataGridViewRow so it can inform the ItemSizingStrategy
@@ -528,8 +545,8 @@ namespace Xamarin.Forms.DataGrid
 			//Grid.SetRow(_listView, 1);
 			//Children.Add(_listView);
 
-			Grid.SetRow(_table, 1);
-			Children.Add(_table);
+			Grid.SetRow(_refreshView, 1);
+			Children.Add(_refreshView);
 		}
 		#endregion
 
@@ -615,7 +632,6 @@ namespace Xamarin.Forms.DataGrid
 
 			_headerView.Padding = new Thickness(BorderThickness.Left, BorderThickness.Top, BorderThickness.Right, 0);
 			_headerView.ColumnSpacing = BorderThickness.HorizontalThickness / 2;
-
 			if (Columns != null)
 			{
 				foreach (var col in Columns)
