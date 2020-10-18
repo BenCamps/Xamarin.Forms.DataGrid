@@ -463,6 +463,7 @@ namespace Xamarin.Forms.DataGrid
 		private readonly CollectionView _table;
 		private readonly IList<double> _computedColumnWidths;
 		private readonly IList<double> _computedColumnStarts;
+		private readonly IList<DataGridViewRow> _attachedRows;
 		#endregion
 
 		#region ctor
@@ -474,6 +475,9 @@ namespace Xamarin.Forms.DataGrid
 			_sortingOrders = new Dictionary<int, SortingOrder>();
 			_computedColumnWidths = new List<double>();
 			_computedColumnStarts = new List<double>();
+			_attachedRows = new List<DataGridViewRow>();
+
+
 			_headerView.LayoutChanged += (s, e) =>
 			{
 				_computedColumnWidths.Clear();
@@ -718,6 +722,20 @@ namespace Xamarin.Forms.DataGrid
 			//_listView.ScrollTo(item, position, animated);
 			_table.ScrollTo(item, position: position, animate: animated);
 		}
+
+
+		internal void AddAttachedRow(DataGridViewRow row)
+		{
+			if (!_attachedRows.Contains(row))
+				_attachedRows.Add(row);
+		}
+		
+		internal void RemoveAttachedRow(DataGridViewRow row)
+		{
+			if (_attachedRows.Contains(row))
+				_attachedRows.Remove(row);
+		}
+		
 		#endregion
 	}
 }
