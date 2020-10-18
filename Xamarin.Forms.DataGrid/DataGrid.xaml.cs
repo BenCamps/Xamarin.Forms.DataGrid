@@ -86,7 +86,10 @@ namespace Xamarin.Forms.DataGrid
 						if (n is INotifyCollectionChanged)
 							(n as INotifyCollectionChanged).CollectionChanged += self.HandleItemsSourceCollectionChanged;
 
-						self.InternalItems = new List<object>(((IEnumerable)n).Cast<object>());
+						Device.BeginInvokeOnMainThread(() =>
+						{
+							self.InternalItems = new List<object>(((IEnumerable)n).Cast<object>());
+						});
 					}
 
 					if (self.SelectedItem != null && !self.InternalItems.Contains(self.SelectedItem))
@@ -550,6 +553,22 @@ namespace Xamarin.Forms.DataGrid
 		#endregion
 
 		#region Header Creation Methods
+
+		internal double GetComputedColumnWidth(int index)
+		{
+			if (index < _computedColumnWidths.Count)
+				return _computedColumnWidths[index];
+
+			return Double.NaN;
+		}
+
+		internal double GetComputedColumnStart(int index)
+		{
+			if (index < _computedColumnStarts.Count)
+				return _computedColumnStarts[index];
+
+			return Double.NaN;
+		}
 
 		private View GetHeaderViewForColumn(DataGridColumn column)
 		{
