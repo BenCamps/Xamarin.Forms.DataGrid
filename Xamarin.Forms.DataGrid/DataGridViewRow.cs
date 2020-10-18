@@ -65,8 +65,20 @@ namespace Xamarin.Forms.DataGrid
 			return false;
 		}
 
+		private bool needsLayout;
+
+		private void SetNeedsLayout()
+		{
+			needsLayout = true;
+		}
+		
 		protected override void LayoutChildren(double x, double y, double width, double height)
 		{
+			if (!needsLayout)
+				return;
+
+			needsLayout = false;
+			
 			var g = DataGrid;
 			var t = g.BorderThickness;
 
@@ -137,6 +149,8 @@ namespace Xamarin.Forms.DataGrid
 
 				_mainLayout.Children.Add(cell);
 			}
+
+			SetNeedsLayout();
 		}
 
 
@@ -204,6 +218,8 @@ namespace Xamarin.Forms.DataGrid
 				DataGrid.ItemSelected += DataGrid_ItemSelected;
 			else
 				DataGrid.ItemSelected -= DataGrid_ItemSelected;
+
+			SetNeedsLayout();
 			
 			if (Parent != null)
 				DataGrid.AddAttachedRow(this);
