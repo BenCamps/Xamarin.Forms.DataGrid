@@ -6,7 +6,6 @@ namespace Xamarin.Forms.DataGrid
 	internal sealed class DataGridViewRow : Layout<View>
 	{
 		#region Fields
-		Layout<View> _mainLayout;
 		Color _bgColor;
 		Color _textColor;
 		bool _hasSelected;
@@ -15,7 +14,6 @@ namespace Xamarin.Forms.DataGrid
 
 		public DataGridViewRow()
 		{
-			_mainLayout = this;
 		}
 
 
@@ -139,7 +137,6 @@ namespace Xamarin.Forms.DataGrid
 					};
 				}
 
-				_mainLayout.Children.Add(cell);
 			}
 
 			SetNeedsLayout();
@@ -185,15 +182,6 @@ namespace Xamarin.Forms.DataGrid
 
 		private void ChangeColor(Color color)
 		{
-			foreach (var v in _mainLayout.Children)
-			{
-				v.BackgroundColor = color;
-
-				if (v is Label label)
-					label.TextColor = _textColor;
-				else if (v is ContentView contentView && contentView.Content is Label label2)
-					label2.TextColor = _textColor;
-			}
 		}
 
 		protected override void OnBindingContextChanged()
@@ -228,6 +216,16 @@ namespace Xamarin.Forms.DataGrid
 		}
 		#endregion
 
+		private DataGrid GetDataGridParent()
+		{
+			Element p = this;
+
+			while (p != null && !(p is DataGrid))
+				p = p.Parent;
+
+			return (DataGrid)p;
+		}
+		
 
 		protected override void OnChildAdded(Element child)
 		{

@@ -500,7 +500,7 @@ namespace Xamarin.Forms.DataGrid
 			_table = new CollectionView
 			{
 				BackgroundColor = Color.Red,//Color.Transparent,
-				ItemTemplate = new DataGridRowTemplateSelector(),
+				ItemTemplate = new DataTemplate(typeof(DataGridViewRow)), //DataGridRowTemplateSelector(),
 				SelectionMode = SelectionMode.Single,
 				ItemSizingStrategy = ItemSizingStrategy.MeasureFirstItem,
 			};
