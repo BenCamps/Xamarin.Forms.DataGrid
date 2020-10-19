@@ -738,6 +738,17 @@ namespace Xamarin.Forms.DataGrid
 
 		private void OnScrolled(object sender, ScrolledEventArgs e)
 		{
+			var sx = ScrollX;
+
+			if (sx < 0)
+				sx = 0;
+				
+			_headerView.Children[0].TranslationX = sx;
+			
+			foreach (var row in _attachedRows)
+			{
+				row.Children[0].TranslationX = sx;
+			}
 		}
 
 		#endregion
