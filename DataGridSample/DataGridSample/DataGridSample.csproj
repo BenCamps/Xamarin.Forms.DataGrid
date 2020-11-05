@@ -25,4 +25,11 @@
 		<ProjectReference Include="..\..\Xamarin.Forms.DataGrid\Xamarin.Forms.DataGrid.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Compile Update="Views\MainPage2.xaml.cs">
+	    <DependentUpon>MainPage2.xaml</DependentUpon>
+	    <SubType>Code</SubType>
+	  </Compile>
+	</ItemGroup>
+
 </Project>
