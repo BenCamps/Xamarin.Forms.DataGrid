@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
@@ -37,6 +38,7 @@ namespace Xamarin.Forms.DataGrid
 					BuildItems(itemsSource);
 					WarmUpCache();
 					InvalidateMeasure();
+					UpdateContainerSelectionMode();
 				}
 			}
 		}
@@ -48,6 +50,7 @@ namespace Xamarin.Forms.DataGrid
 		{
 			DataGrid = dg;
 			Scroller = scroller;
+			DataGrid.PropertyChanged += DataGridOnPropertyChanged;
 			Scroller.Scrolled += OnScrolled;
 
 
@@ -59,6 +62,22 @@ namespace Xamarin.Forms.DataGrid
 	Scroller.ScrollToAsync(0, Scroller.ScrollY + 1000, false);
 }
 			});
+		}
+
+		private void DataGridOnPropertyChanged(object sender, PropertyChangedEventArgs e)
+		{
+			var propertyName = e.PropertyName;
+
+			if (propertyName == nameof(DataGrid.SelectedItem) 
+			    || propertyName == nameof(DataGrid.SelectedItems))
+			{
+				UpdateContainerSelection();
+			}
+			else if (propertyName == nameof(DataGrid.SelectionMode) 
+			         || propertyName == nameof(DataGrid.SelectionColor))
+			{
+				UpdateContainerSelectionMode();
+			}
 		}
 
 		// protected override void OnPropertyChanged(string propertyName = null)
@@ -535,10 +554,9 @@ namespace Xamarin.Forms.DataGrid
 		{
 			var row = new NGDataGridViewRow(DataGrid);
 
-			//            row.TranslationX = -10000;
 			row.Opacity = 0;
 			// row.IsVisible = false;
-			row.ItemInfo = null;
+			//row.ItemInfo = null;
 
 			cachedRows.Enqueue(row);
 
@@ -546,6 +564,7 @@ namespace Xamarin.Forms.DataGrid
 			// {
 			InternalChildren.Add(row);
 
+			//layout after adding so it can access the DataGrid?
 			row.Layout(new Rectangle(0, 0, DataGrid.ComputedColumnsWidth, DataGrid.RowHeight));
 			// });
 		}
@@ -580,27 +599,26 @@ namespace Xamarin.Forms.DataGrid
 			row.TranslationY = info.Y;
 			row.ItemInfo = info;
 			// row.IsVisible = true;
-			// row.TranslationX = 0;
 			row.Opacity = 1;
 			//row.BatchCommit();
 		}
 
 
-		void DetachRow(ItemInfo info)
+		void DetachRow(ItemInfo info, bool unbind = false)
 		{
 			if (info.View == null)
 				return;
 
 			var row = info.View;
-			info.View = null;
 
 			// row.BatchBegin();
-			// row.TranslationX = -10000;
 			row.Opacity = 0;
 			// row.IsVisible = false;
-			// row.ItemInfo = null;
+			if (unbind)
+				row.ItemInfo = null;
 			// row.BatchCommit();
 
+			info.View = null;
 			cachedRows.Enqueue(row);
 		}
 
@@ -637,10 +655,7 @@ namespace Xamarin.Forms.DataGrid
 
 			foreach (var info in Items)
 			{
-				if (info.View != null)
-					info.View.ItemInfo = null;
-
-				DetachRow(info);
+				DetachRow(info, true);
 			}
 		}
 
@@ -682,6 +697,99 @@ namespace Xamarin.Forms.DataGrid
 		#endregion
 
 
+		#region Selection
+
+		internal void SelectRow(ItemInfo info)
+		{
+			if (info == null)
+				return;
+			
+			switch (DataGrid.SelectionMode)
+			{
+				case SelectionMode.None:
+					break;
+				case SelectionMode.Single:
+				{
+					DataGrid.SetValueFromRenderer(NGDataGrid.SelectedItemProperty, info.Item);
+				} break;
+				case SelectionMode.Multiple:
+				{
+					//this is called when a row is tapped. 
+					//if info.Selected == false, select the items
+					//if true, deselect the item
+					if (info.Selected)
+						DataGrid.SelectedItems.Remove(info.Item);
+					else
+						DataGrid.SelectedItems.Add(info.Item);
+				} break;
+			}
+		}
+
+		void UpdateContainerSelection()
+		{
+			switch (DataGrid.SelectionMode)
+			{
+				case SelectionMode.None:
+					break;
+				case SelectionMode.Single:
+				{
+					ClearRowSelections();
+					UpdateItemSelection(DataGrid.SelectedItem, true);
+				} break;
+				case SelectionMode.Multiple:
+				{
+					ClearRowSelections();
+					foreach (var item in DataGrid.SelectedItems)
+					{
+						UpdateItemSelection(item, true);
+					}
+				} break;
+			}
+		}
+
+		void UpdateContainerSelectionMode()
+		{
+			switch (DataGrid.SelectionMode)
+			{
+				case SelectionMode.None:
+					ClearRowSelections();
+					break;
+				case SelectionMode.Single:
+					break;
+				case SelectionMode.Multiple:
+					break;
+			}
+			
+			UpdateContainerSelection();
+		}
+
+		void ClearRowSelections()
+		{
+			foreach (var info in Items)
+			{
+				UpdateItemInfoSelection(info, false);
+			}
+		}
+
+		void UpdateItemSelection(object item, bool selected)
+		{
+			UpdateItemInfoSelection(GetItemInfoFor(item), selected);
+		}
+		
+		void UpdateItemInfoSelection(ItemInfo itemInfo, bool selected)
+		{
+			if (itemInfo == null || itemInfo.Selected == selected) 
+				return;
+			
+			itemInfo.Selected = selected;
+			itemInfo.View?.UpdateSelection();
+		}
+		
+		
+		#endregion
+		
+		
+		
 
 	}
 

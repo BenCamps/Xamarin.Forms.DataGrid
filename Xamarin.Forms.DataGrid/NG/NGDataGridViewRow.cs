@@ -9,11 +9,10 @@ namespace Xamarin.Forms.DataGrid
 	internal sealed class NGDataGridViewRow : DeafLayout
 	{
 		#region Fields
+		
 		Color _bgColor;
 		Color _textColor;
-
-		private NGDataGridContainer Container;
-
+		
 		#endregion
 
 
@@ -270,8 +269,8 @@ namespace Xamarin.Forms.DataGrid
 
 			if (RowIndex > -1)
 			{
-				RowBackgroundColor = DataGrid.SelectionEnabled && IsItemSelected
-					? DataGrid.ActiveRowColor
+				RowBackgroundColor = IsItemSelected
+					? DataGrid.SelectionColor
 					: DataGrid.RowsBackgroundColorPalette.GetColor(RowIndex, BindingContext);
 
 				RowForegroundColor = DataGrid.RowsTextColorPalette.GetColor(RowIndex, BindingContext);
@@ -280,7 +279,7 @@ namespace Xamarin.Forms.DataGrid
 				updateNeeded = false;
 			}
 		}
-
+		
 		// private void ChangeChildrenColors()
 		// {
 		// 	foreach (var v in Children)
@@ -305,58 +304,68 @@ namespace Xamarin.Forms.DataGrid
 		{
 			base.OnParentSet();
 
-			//			DataGrid = GetDataGridParent();
-			Container = GetContainerParent();
+			// DataGrid = GetDataGridParent();
+			// Container = GetContainerParent();
 
 			if (Parent != null)
 			{
 				//				DataGrid.AddAttachedRow(this);
-				DataGrid.ItemSelected += DataGrid_ItemSelected;
+//				DataGrid.ItemSelected += DataGrid_ItemSelected;
 			}
 			else
 			{
 				//				DataGrid.RemoveAttachedRow(this);
-				DataGrid.ItemSelected -= DataGrid_ItemSelected;
+//				DataGrid.ItemSelected -= DataGrid_ItemSelected;
 			}
 
 			SetNeedsLayout();
 		}
+		
 
+		// private void DataGrid_ItemSelected(object sender, SelectedItemChangedEventArgs e)
+		// {
+		// 	if (DataGrid.SelectionEnabled && (e.SelectedItem == BindingContext || IsItemSelected))
+		// 	{
+		// 		InvalidateBackground();
+		// 	}
+		// }
+		#endregion
+
+		#region Selection
 
 		private void RowTapped()
 		{
-			//todo: let the grid know this row was tapped
+			DataGrid.Container.SelectRow(ItemInfo);
 		}
-
-
-		private void DataGrid_ItemSelected(object sender, SelectedItemChangedEventArgs e)
+		
+		internal void UpdateSelection()
 		{
-			if (DataGrid.SelectionEnabled && (e.SelectedItem == BindingContext || IsItemSelected))
-			{
-				InvalidateBackground();
-			}
+			InvalidateBackground();
+			UpdateBackgroundColor();
 		}
+
 		#endregion
+		
 
-		private NGDataGrid GetDataGridParent()
-		{
-			Element p = this;
-
-			while (p != null && !(p is NGDataGrid))
-				p = p.Parent;
-
-			return (NGDataGrid)p;
-		}
-
-		private NGDataGridContainer GetContainerParent()
-		{
-			Element p = this;
-
-			while (p != null && !(p is NGDataGridContainer))
-				p = p.Parent;
-
-			return (NGDataGridContainer)p;
-		}
+		// private NGDataGrid GetDataGridParent()
+		// {
+		// 	Element p = this;
+		//
+		// 	while (p != null && !(p is NGDataGrid))
+		// 		p = p.Parent;
+		//
+		// 	return (NGDataGrid)p;
+		// }
+		//
+		// private NGDataGridContainer GetContainerParent()
+		// {
+		// 	Element p = this;
+		//
+		// 	while (p != null && !(p is NGDataGridContainer))
+		// 		p = p.Parent;
+		//
+		// 	return (NGDataGridContainer)p;
+		// }
 
 
 		protected override void OnChildMeasureInvalidated()

@@ -12,13 +12,7 @@ namespace Xamarin.Forms.DataGrid
 	{
 		#region Bindable properties
 		public static readonly BindableProperty ActiveRowColorProperty =
-			BindableProperty.Create(nameof(ActiveRowColor), typeof(Color), typeof(NGDataGrid), Color.FromRgb(128, 144, 160),
-				coerceValue: (b, v) =>
-				{
-					if (!(b as NGDataGrid).SelectionEnabled)
-						throw new InvalidOperationException("Datagrid must be SelectionEnabled=true to set ActiveRowColor");
-					return v;
-				});
+			BindableProperty.Create(nameof(ActiveRowColor), typeof(Color), typeof(NGDataGrid), Color.FromRgb(128, 144, 160));
 
 		public static readonly BindableProperty HeaderBackgroundProperty =
 			BindableProperty.Create(nameof(HeaderBackground), typeof(Color), typeof(NGDataGrid), Color.White,
@@ -114,40 +108,7 @@ namespace Xamarin.Forms.DataGrid
 
 		public static readonly BindableProperty FontFamilyProperty =
 			BindableProperty.Create(nameof(FontFamily), typeof(string), typeof(NGDataGrid), Font.Default.FontFamily);
-
-		public static readonly BindableProperty SelectedItemProperty =
-			BindableProperty.Create(nameof(SelectedItem), typeof(object), typeof(NGDataGrid), null, BindingMode.TwoWay,
-				coerceValue: (b, v) =>
-				{
-					var self = b as NGDataGrid;
-					if (!self.SelectionEnabled && v != null)
-						throw new InvalidOperationException("NGDataGrid must be SelectionEnabled=true to set SelectedItem");
-					if (self.InternalItems != null && self.InternalItems.Contains(v))
-						return v;
-					else
-						return null;
-				},
-				propertyChanged: (b, o, n) =>
-				{
-					var self = b as NGDataGrid;
-					//if (self._listView.SelectedItem != n)
-					//	self._listView.SelectedItem = n;
-
-					//todo: implement Container selection
-					// if (self.Container.SelectedItem != n)
-					// 	self.Container.SelectedItem = n;
-				}
-			);
-
-		public static readonly BindableProperty SelectionEnabledProperty =
-			BindableProperty.Create(nameof(SelectionEnabled), typeof(bool), typeof(NGDataGrid), true,
-				propertyChanged: (b, o, n) =>
-				{
-					var self = b as NGDataGrid;
-					if (!self.SelectionEnabled && self.SelectedItem != null)
-						self.SelectedItem = null;
-				});
-
+		
 		public static readonly BindableProperty RefreshCommandProperty =
 			BindableProperty.Create(nameof(RefreshCommand), typeof(ICommand), typeof(NGDataGrid), null,
 				propertyChanged: (b, o, n) =>
@@ -329,18 +290,6 @@ namespace Xamarin.Forms.DataGrid
 		{
 			get => (bool)GetValue(IsSortableProperty);
 			set => SetValue(IsSortableProperty, value);
-		}
-
-		public bool SelectionEnabled
-		{
-			get => (bool)GetValue(SelectionEnabledProperty);
-			set => SetValue(SelectionEnabledProperty, value);
-		}
-
-		public object SelectedItem
-		{
-			get => GetValue(SelectedItemProperty);
-			set => SetValue(SelectedItemProperty, value);
 		}
 
 		public ICommand RefreshCommand

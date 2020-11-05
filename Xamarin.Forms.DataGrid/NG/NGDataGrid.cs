@@ -7,7 +7,7 @@ using Xamarin.Forms.Shapes;
 
 namespace Xamarin.Forms.DataGrid
 {
-	//todo: implement selection
+	//done: implement selection
 	//todo: implement grouping
 	//todo: implement group display expand/collapse
 	//todo: implement query cell colors
@@ -21,7 +21,7 @@ namespace Xamarin.Forms.DataGrid
 		private View HeaderView;
 		private RefreshView RefreshView;
 		private NGDataGridScroller Scroller;
-		private NGDataGridContainer Container;
+		internal NGDataGridContainer Container;
 		// private CollectionView Container;
 
 		private ContentView _noDataView;
