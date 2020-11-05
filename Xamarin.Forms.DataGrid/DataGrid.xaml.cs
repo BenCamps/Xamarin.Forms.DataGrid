@@ -469,9 +469,26 @@ namespace Xamarin.Forms.DataGrid
 
 		#region ctor
 
+		
+		protected override SizeRequest OnMeasure(double widthConstraint, double heightConstraint)
+		{
+			return base.OnMeasure(widthConstraint, heightConstraint);
+		}
+
+		protected override SizeRequest OnSizeRequest(double widthConstraint, double heightConstraint)
+		{
+			return base.OnSizeRequest(widthConstraint, heightConstraint);
+		}
+
+		protected override void OnSizeAllocated(double width, double height)
+		{
+			base.OnSizeAllocated(width, height);
+		}
+
 		public DataGrid()
 		{
 			InitializeComponent();
+			
 
 			_sortingOrders = new Dictionary<int, SortingOrder>();
 			_computedColumnWidths = new List<double>();
@@ -633,8 +650,8 @@ namespace Xamarin.Forms.DataGrid
 			_headerView.ColumnDefinitions.Clear();
 			_sortingOrders.Clear();
 
-			_headerView.Padding = new Thickness(BorderThickness.Left, BorderThickness.Top, BorderThickness.Right, 0);
-			_headerView.ColumnSpacing = BorderThickness.HorizontalThickness / 2;
+			_headerView.Padding = 0;//new Thickness(BorderThickness.Left, BorderThickness.Top, BorderThickness.Right, 0);
+			_headerView.ColumnSpacing = 0; //BorderThickness.HorizontalThickness / 2;
 			if (Columns != null)
 			{
 				foreach (var col in Columns)

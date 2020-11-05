@@ -9,6 +9,10 @@ namespace Xamarin.Forms.DataGrid
 			BindableProperty.Create(nameof(Width), typeof(GridLength), typeof(DataGridColumn), new GridLength(1, GridUnitType.Star),
 				propertyChanged: (b, o, n) => { if (o != n) (b as DataGridColumn).OnSizeChanged(); });
 
+		public static readonly BindableProperty MinimumWidthProperty =
+			BindableProperty.Create(nameof(MinimumWidth), typeof(double), typeof(DataGridColumn), 80d,
+				propertyChanged: (b, o, n) => { if (o != n) (b as DataGridColumn).OnSizeChanged(); });
+
 		public static readonly BindableProperty TitleProperty =
 			BindableProperty.Create(nameof(Title), typeof(string), typeof(DataGridColumn), string.Empty,
 				propertyChanged: (b, o, n) => (b as DataGridColumn).HeaderLabel.Text = (string)n);
@@ -59,6 +63,12 @@ namespace Xamarin.Forms.DataGrid
 			set { SetValue(WidthProperty, value); }
 		}
 
+		public double MinimumWidth
+		{
+			get { return (double)GetValue(MinimumWidthProperty); }
+			set { SetValue(MinimumWidthProperty, value); }
+		}
+
 		public string Title
 		{
 			get { return (string)GetValue(TitleProperty); }
@@ -101,9 +111,6 @@ namespace Xamarin.Forms.DataGrid
 			set { SetValue(CellTemplateProperty, value); }
 		}
 
-		internal Image SortingIcon { get; set; }
-		internal Label HeaderLabel { get; set; }
-
 		public LayoutOptions HorizontalContentAlignment
 		{
 			get { return (LayoutOptions)GetValue(HorizontalContentAlignmentProperty); }
@@ -132,6 +139,13 @@ namespace Xamarin.Forms.DataGrid
 
 		public event EventHandler SizeChanged;
 
+		internal Image SortingIcon;
+		internal Label HeaderLabel;
+
+		internal double ComputedX;
+		internal double ComputedWidth;
+		
+		
 		public DataGridColumn()
 		{
 			HeaderLabel = new Label();
