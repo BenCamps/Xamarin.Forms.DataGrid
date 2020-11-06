@@ -11,9 +11,6 @@ namespace Xamarin.Forms.DataGrid
 	public partial class NGDataGrid
 	{
 		#region Bindable properties
-		public static readonly BindableProperty ActiveRowColorProperty =
-			BindableProperty.Create(nameof(ActiveRowColor), typeof(Color), typeof(NGDataGrid), Color.FromRgb(128, 144, 160));
-
 		public static readonly BindableProperty HeaderBackgroundProperty =
 			BindableProperty.Create(nameof(HeaderBackground), typeof(Color), typeof(NGDataGrid), Color.White,
 				propertyChanged: (b, o, n) =>
@@ -213,12 +210,6 @@ namespace Xamarin.Forms.DataGrid
 		#endregion
 
 		#region Properties
-		public Color ActiveRowColor
-		{
-			get => (Color)GetValue(ActiveRowColorProperty);
-			set => SetValue(ActiveRowColorProperty, value);
-		}
-
 		public Color HeaderBackground
 		{
 			get => (Color)GetValue(HeaderBackgroundProperty);

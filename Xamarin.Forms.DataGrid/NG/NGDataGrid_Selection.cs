@@ -42,8 +42,8 @@ namespace Xamarin.Forms.DataGrid
 
 		public Color SelectionColor
 		{
-			get => (Color)GetValue(ActiveRowColorProperty);
-			set => SetValue(ActiveRowColorProperty, value);
+			get => (Color)GetValue(SelectionColorProperty);
+			set => SetValue(SelectionColorProperty, value);
 		}
 
 		public object SelectedItem
