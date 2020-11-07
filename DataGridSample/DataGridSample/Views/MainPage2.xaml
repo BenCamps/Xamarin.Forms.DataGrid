@@ -9,12 +9,20 @@
     <ContentView BackgroundColor="Azure" Margin="20">
 
 
-        <dg:NGDataGrid ItemsSource="{Binding Teams}" SelectionEnabled="True" SelectedItem="{Binding SelectedTeam}"
-						 RowHeight="40" HeaderHeight="30" BorderColor="#CCCCCC" HeaderBackground="#E0E6F8" BorderThickness="1,1,1,1"
-						 RefreshCommand="{Binding RefreshCommand}" IsRefreshing="{Binding IsRefreshing}"
-						 ActiveRowColor="#8899AA"
-                         SelectionMode="Single"
-                         >
+        <dg:NGDataGrid ItemsSource="{Binding Teams}" 
+                       SelectedItem="{Binding SelectedTeam}"
+                       RowHeight="40" 
+                       HeaderHeight="30" 
+                       HeaderBackground="#E0E6F8" 
+                       SelectionColor="#8899AA"
+                       SelectionMode="Single"
+                       RefreshCommand="{Binding RefreshCommand}" 
+                       IsRefreshing="{Binding IsRefreshing}"
+                       GridLineColor="#CCCCCC" 
+                       GridLineWidth="1"
+                       GridLinesVisibility="Both"
+                       HeaderGridLinesVisible="True"
+                       >
             <dg:NGDataGrid.Columns>
                 <dg:DataGridColumn Title="Team" PropertyName="Name" Width="120"/>
                 <!--
