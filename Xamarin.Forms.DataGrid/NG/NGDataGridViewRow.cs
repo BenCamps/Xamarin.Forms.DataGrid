@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using Xamarin.Forms.Shapes;
 
 namespace Xamarin.Forms.DataGrid
 {
@@ -13,6 +14,8 @@ namespace Xamarin.Forms.DataGrid
 		Color _bgColor;
 		Color _textColor;
 		
+		BoxView HorizontalGridLineView;
+
 		#endregion
 
 
@@ -28,6 +31,14 @@ namespace Xamarin.Forms.DataGrid
 				NumberOfTapsRequired = 1,
 				TappedCallback = (v, o) => { RowTapped(); }
 			});
+			
+			//Setup the grid line view
+			HorizontalGridLineView = new BoxView();
+			HorizontalGridLineView.SetBinding(BackgroundColorProperty, new Binding(nameof(DataGrid.GridLineColor), BindingMode.OneWay, source: DataGrid));
+			HorizontalGridLineView.SetBinding(HeightRequestProperty, new Binding(nameof(DataGrid.GridLineWidth), BindingMode.OneWay, source: DataGrid));
+			HorizontalGridLineView.VerticalOptions = LayoutOptions.Start;
+			
+			InternalChildren.Add(HorizontalGridLineView);
 		}
 
 
@@ -136,30 +147,60 @@ namespace Xamarin.Forms.DataGrid
 			needsLayout = false;
 
 			var g = DataGrid;
-			//var t = g.BorderThickness;
 
-			var cy = y;//t.Top;
-			var ch = g.RowHeight; //- t.VerticalThickness;
+			var cy = y;
+			var ch = (double) g.RowHeight;
+			
+			var boxRect = new Rectangle(x, y, width, height);
 
-			var i = 0;
+			var gridLineVisibility = DataGrid.GridLinesVisibility;
+			var showVerticalLines = gridLineVisibility == GridLineVisibility.Vertical || gridLineVisibility == GridLineVisibility.Both;
+			var showHorizontalLines = gridLineVisibility == GridLineVisibility.Horizontal || gridLineVisibility == GridLineVisibility.Both;
 
+			//show the grid line and adjust child layout area
+			if (showHorizontalLines)
+			{
+				HorizontalGridLineView.IsVisible = true;
+				cy += DataGrid.GridLineWidth;
+				ch -= DataGrid.GridLineWidth;
+			}
+			else
+			{
+				HorizontalGridLineView.IsVisible = false;
+			}
+			
 			foreach (View c in Children)
 			{
 				if (!c.IsVisible)
 					continue;
+				
+				if (c is BoxView)
+					LayoutChildIntoBoundingRegion(c, boxRect);
+				else
+				{
+					var cellView = c as NGDataGridViewCell;
+					var colIndex = cellView.ColumnIndex;
+					
+					var cw = Math.Ceiling(g.GetComputedColumnWidth(colIndex));
+					var cx = x + Math.Ceiling(g.GetComputedColumnStart(colIndex));
+					var r = new Rectangle(cx, cy, cw, ch);
 
-				var cw = Math.Ceiling(g.GetComputedColumnWidth(i));
-				var cx = x + Math.Ceiling(g.GetComputedColumnStart(i));// - t.Left;
-
-				var r = new Rectangle(cx, cy, cw, ch);
-
-				if (c.Width != cw || c.Height != ch)
-					c.Layout(r);
-
-				// c.TranslationX = 0;
-				// c.TranslationY = 0;
-
-				i++;
+					var gridLine = cellView.Children[1] as View;
+					//adjust for gridLine
+					if (colIndex == 0 || !showVerticalLines)
+					{
+						gridLine.IsVisible = false;
+						cellView.Content.Margin = 0;
+					}
+					else
+					{
+						gridLine.IsVisible = true;
+						cellView.Content.Margin = new Thickness(gridLine.WidthRequest, 0,0,0);
+					}
+					
+					if (c.Width != cw || c.Height != ch)
+						c.Layout(r);
+				}
 			}
 		}
 
@@ -188,14 +229,12 @@ namespace Xamarin.Forms.DataGrid
 		{
 			HeightRequest = DataGrid.RowHeight;
 
+			var i = 0;
 			foreach (var col in DataGrid.Columns)
 			{
+				var colIndex = i++;
+				
 				View content;
-				var cell = new ContentView()
-				{
-					Margin = 0,
-					Padding = DataGrid.BorderThickness,
-				};
 
 				if (col.CellTemplate != null)
 				{
@@ -231,10 +270,11 @@ namespace Xamarin.Forms.DataGrid
 
 				//bind content background as row background color
 				content.SetBinding(BackgroundColorProperty, new Binding(nameof(RowBackgroundColor), BindingMode.OneWay, source: this));
-				//bind cell background as border color
-				cell.SetBinding(BackgroundColorProperty, new Binding(nameof(DataGrid.BorderColor), BindingMode.OneWay, source: DataGrid));
 
+				var cell = CreateCellView();
+				cell.ColumnIndex = colIndex;
 				cell.Content = content;
+				
 				InternalChildren.Add(cell);
 			}
 
@@ -242,6 +282,23 @@ namespace Xamarin.Forms.DataGrid
 			//InvalidateBackground();
 		}
 
+		private NGDataGridViewCell CreateCellView()
+		{
+			var cell = new NGDataGridViewCell();
+
+			//add vertical grid line
+			BoxView vline = new BoxView();
+
+			vline.SetBinding(WidthRequestProperty, new Binding(nameof(DataGrid.GridLineWidth), BindingMode.OneWay, source: DataGrid));
+			vline.SetBinding(BackgroundColorProperty, new Binding(nameof(DataGrid.GridLineColor), BindingMode.OneWay, source: DataGrid));
+			vline.HorizontalOptions = LayoutOptions.Start;
+
+			cell.Children.Add(vline);
+			
+			return cell;
+		}
+		
+		
 
 		//used to prevent multiple updates when setting RowContext and Index properties
 		private bool updateNeeded;

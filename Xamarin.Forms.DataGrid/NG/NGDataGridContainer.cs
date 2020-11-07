@@ -36,7 +36,6 @@ namespace Xamarin.Forms.DataGrid
 					ReleaseItems();
 					itemsSource = value;
 					BuildItems(itemsSource);
-					WarmUpCache();
 					InvalidateMeasure();
 					UpdateContainerSelectionMode();
 				}
@@ -102,6 +101,7 @@ namespace Xamarin.Forms.DataGrid
 				{
 					OnScrolled(Scroller, new ScrolledEventArgs(Scroller.ScrollX, Scroller.ScrollY));
 					doneFirstLayout = true;
+//					WarmUpCache();
 					//                InvalidateMeasure();
 				});
 			}
@@ -114,7 +114,7 @@ namespace Xamarin.Forms.DataGrid
 
 		protected override void OnSizeAllocated(double width, double height)
 		{
-			//shortcut Layout
+			//shortcut default Layout
 			//base.OnSizeAllocated(width, height);
 			LayoutChildren(0, 0, width, height);
 		}
@@ -124,42 +124,33 @@ namespace Xamarin.Forms.DataGrid
 
 		#region Scrolling
 
-		private double lastViewStart = 0;
-		private double lastViewEnd = 0;
-		private int windowIndexStart = 0;
-		private int windowIndexEnd = 0;
-
-		private double extendedWindowStart = 0d;
-		private double extendedWindowEnd = 0d;
-
-		private int viewFirstItemIndex = 0;
-
+		private double _lastViewStart = 0;
+		private double _lastViewEnd = 0;
 
 		private void OnScrolled(object sender, ScrolledEventArgs e)
 		{
-			var sw = new Stopwatch();
-			sw.Start();
 
+			// var sw = new Stopwatch();
+			// sw.Start();
 			// Debug.WriteLine($"Container.Scrolled {e.ScrollX},{e.ScrollY} X6");
-
+			
 			if (Items == null || Items.Count == 0)
 				return; //nothing to show
 
 			//don't process items for negative scroll bounce
 			var scrollY = e.ScrollY;
 			var rowHeight = DataGrid.RowHeight;
-			//			if (e.ScrollY < 0)
-			//				scrollY = 0;
 
-			var viewStart = lastViewStart;
-			var viewEnd = lastViewEnd;//viewStart + viewHeight;
-									  //var viewHeight = Scroller.Height;
+			var viewStart = _lastViewStart;
+			var viewEnd = _lastViewEnd;
+
 			var windowHeight = Scroller.Height;
 			var windowStart = scrollY;
 			var windowEnd = windowStart + windowHeight;
+			
 			var itemsCount = Items.Count;
-			//var lastItemIndex = itemsCount - 1;
-			var isForward = windowStart >= viewStart; //viewStart >= lastViewStart;
+
+			var isForward = windowStart >= viewStart; 
 
 
 			//Algo 4 -
@@ -191,20 +182,22 @@ namespace Xamarin.Forms.DataGrid
 				showStart -= padSize;
 			}
 
-			if (clearStart != clearEnd)
+			if (Math.Abs(clearStart - clearEnd) > 0.0001)
 			{
 				if (Device.RuntimePlatform != Device.macOS)
 				{
 					Device.BeginInvokeOnMainThread(async () =>
 					{
+						//delay 2 frames
 						await Task.Delay(16 * 2);
-						clearItems();
+						ClearItems();
 					});
 				}
 				else
-					clearItems();
+					ClearItems();
 
-				void clearItems()
+				//LOCAL FUNCTION
+				void ClearItems()
 				{
 					for (var i = GetItemIndexAt(clearStart); i < itemsCount; i++)
 					{
@@ -236,16 +229,16 @@ namespace Xamarin.Forms.DataGrid
 				}
 			}
 
-			if (showStart != showEnd)
+			if (Math.Abs(showStart - showEnd) > 0.0001)
 			{
-				var doneAttach = false;
+				// var doneAttach = false;
 				for (var i = GetItemIndexAt(showStart); i < itemsCount; i++)
 				{
 					var info = Items[i];
 					if (info.Start <= showEnd)
 					{
 						AttacheRow(info);
-						doneAttach = true;
+						// doneAttach = true;
 					}
 					else
 					{
@@ -253,237 +246,14 @@ namespace Xamarin.Forms.DataGrid
 					}
 				}
 
-				if (doneAttach)
-					Debug.WriteLine($"Scroll Attach: Rows {Children.Count - cachedRows.Count} Cache {cachedRows.Count} Ellapsed {sw.ElapsedMilliseconds}ms Clear {clearStart}-{clearEnd} Show {showStart}-{showEnd} Distance {windowStart - viewStart}");
+				// if (doneAttach)
+				// 	Debug.WriteLine($"Scroll Attach: Rows {Children.Count - cachedRows.Count} Cache {cachedRows.Count} Ellapsed {sw.ElapsedMilliseconds}ms Clear {clearStart}-{clearEnd} Show {showStart}-{showEnd} Distance {windowStart - viewStart}");
 			}
 
-
-			//Algo 3
-			/*
-			var expandSize = DataGrid.RowHeight * 1;
-			var expandedViewStart = viewStart - expandSize;
-			var expandedViewEnd = viewEnd + expandSize;
-			var expandedWindowStart = windowStart - expandSize;
-			var expandedWindowEnd = windowEnd + expandSize;
-
-			var localViewFirstIndex = viewFirstItemIndex;
-
-			//hide items
-			//Task.Run(async () =>
-			Device.BeginInvokeOnMainThread(async () =>
-			{
-				await Task.Delay(16); //about five frames at 60fps
-				for (var i = Math.Max(0, localViewFirstIndex - 2); i < itemsCount; i++)
-				{
-					var info = Items[i];
-
-					//process all rows in the previous frame
-					if (info.Start > expandedViewEnd)
-						break;
-
-					if (info.End < expandedWindowStart || info.Start > expandedWindowEnd)
-						//defer detach, this increases cache pressure but prevents blanking of rows still visible
-						//Device.BeginInvokeOnMainThread(() => DetachRow(info));
-						DetachRow(info);
-				}
-			});
-
-
-			//get first row index
-			var windowFirstItemIndex = GetItemIndexAt(expandedWindowStart, viewFirstItemIndex, isForward);
-
-			//show items
-			for (var i = windowFirstItemIndex; i < itemsCount; i++)
-			{
-				var info = Items[i];
-				if (info.End <= expandedWindowEnd)
-					AttacheRow(info);
-				else
-					break;
-			}
-
-			viewFirstItemIndex = windowFirstItemIndex;
-			*/
-
-
-			/*
-			 //Algo 2
-			var shiftWindow = false;
-
-			if (windowStart <= extendedWindowStart || windowEnd >= extendedWindowEnd)
-			{
-				var shiftSize = Math.Abs(windowStart - viewStart) * 1.5; //viewHeight/3;
-				extendedWindowStart = Math.Max(windowStart - shiftSize, 0);
-				extendedWindowEnd = Math.Min(windowEnd + shiftSize, this.Height);
-				shiftWindow = true;
-			}
-
-
-
-			//horizontal only?
-			if (viewStart == windowStart && doneFirstLayout)
-				return;
-
-			if (isForward)
-			{
-				//show items moved into view
-				for (var i = windowIndexEnd; i < itemsCount; i++)
-				{
-					var info = Items[i];
-					//skip rows that have moved past the top on a big scroll
-					if (info.End < windowStart)
-					{
-						// DetachRow(info);
-						continue;
-					}
-					//attach rows that became visible
-					if (info.Start < windowEnd)
-					{
-						AttacheRow(info);
-					}
-					//stop because we reached the end of the window
-					else
-					{
-						windowIndexEnd = Math.Max(0, i - 1);
-						break;
-					}
-				}
-
-				if (shiftWindow)
-				{
-					Device.BeginInvokeOnMainThread(() =>
-					{
-						//prepare items in extended area
-						for (var i = windowIndexEnd; i < itemsCount; i++)
-						{
-							var info = Items[i];
-							//attach rows that became visible
-							if (info.Start < extendedWindowEnd)
-							{
-								AttacheRow(info);
-							}
-							//stop because we reached the end of the window
-							else
-							{
-								windowIndexEnd = Math.Max(0, i - 1);
-								break;
-							}
-						}
-						Debug.WriteLine($"Scroll UP Extended Rows {Children.Count - cachedRows.Count} Cached {cachedRows.Count} **");
-						// });
-						//
-						//
-						// Device.BeginInvokeOnMainThread(() =>
-						// {
-						//detach items moved out of view
-						for (var i = windowIndexStart; i <= windowIndexEnd; i++)
-						{
-							var info = Items[i];
-							//detach rows that became hidden
-							if (info.End < extendedWindowStart) //viewStart)
-							{
-								DetachRow(info);
-							}
-							else
-							{
-								windowIndexStart = Math.Max(0, i - 1);
-								break;
-							}
-						}
-
-						Debug.WriteLine($"Scroll UP {windowIndexStart},{windowIndexEnd}");
-					});
-				}
-			}
-			else
-			{
-				//show items moved into view
-				for (var i = windowIndexStart; i >= 0; i--)
-				{
-					var info = Items[i];
-					//attach rows that became visible
-					if (info.Start >= windowEnd)
-					{
-						// DetachRow(info);
-						continue;
-					}
-					if (info.End >= windowStart)
-					{
-						AttacheRow(info);
-					}
-					else
-					{
-						windowIndexStart = Math.Min(lastItemIndex, i + 1);
-						break;
-					}
-				}
-
-				if (shiftWindow)
-				{
-					Device.BeginInvokeOnMainThread(() =>
-					{
-						//prepare items in extended area
-						for (var i = windowIndexStart; i >= 0; i--)
-						{
-							var info = Items[i];
-							if (info.End >= extendedWindowStart)
-							{
-								AttacheRow(info);
-							}
-							else
-							{
-								windowIndexStart = Math.Min(lastItemIndex, i + 1);
-								break;
-							}
-						}
-						Debug.WriteLine($"Scroll DOWN Extended Rows {Children.Count - cachedRows.Count} Cached {cachedRows.Count} *");
-						// });
-						//
-						//
-						// Device.BeginInvokeOnMainThread(() =>
-						// {
-						//detach items moved out of view
-						for (var i = windowIndexEnd; i >= windowIndexStart; i--)
-						{
-							var info = Items[i];
-							//detach rows that became hidden
-							if (info.Start >= extendedWindowEnd) //viewEnd)
-							{
-								DetachRow(info);
-							}
-							else
-							{
-								windowIndexEnd = Math.Min(lastItemIndex, i + 1);
-								break;
-							}
-						}
-
-						Debug.WriteLine($"Scroll DOWN {windowIndexStart},{windowIndexEnd}");
-					});
-				}
-			}
-			*/
-
-
-
-			/*
-			 //Algo 1
-            foreach (var info in Items)
-            {
-                //hide rows outside view window
-                if (info.End < windowStart || info.Start > windowEnd)
-                {
-                    DetachRow(info);
-                    continue;
-                }
-
-                AttacheRow(info);
-            }
-            */
-
-			//set the last y
-			lastViewStart = windowStart;
-			lastViewEnd = windowEnd;
+			
+			//set the last view
+			_lastViewStart = windowStart;
+			_lastViewEnd = windowEnd;
 
 			// Debug.WriteLine($"Scroll END Visible Rows {Children.Count - cachedRows.Count} Cache {cachedRows.Count} Ellapsed {sw.ElapsedMilliseconds}ms");
 		}
@@ -532,10 +302,13 @@ namespace Xamarin.Forms.DataGrid
 
 		internal ItemInfo GetItemInfoFor(object item)
 		{
-			foreach (var info in Items)
+			if (Items != null)
 			{
-				if (info.Item == item)
-					return info;
+				foreach (var info in Items)
+				{
+					if (info.Item == item)
+						return info;
+				}
 			}
 
 			return null;
@@ -662,36 +435,20 @@ namespace Xamarin.Forms.DataGrid
 
 		void WarmUpCache()
 		{
-			if (cachedRows.Count > 0)
+			if (Width == -1 || Height == -1)
+				return;
+			
+			//estimate double the items needed for 1 frame
+			var n = (int) (Height / DataGrid.RowHeight * 2);
+
+			if (Items != null && Items.Count <= n)
 				return;
 
-			//attache the first item so we can get an initial layout call
-			var n = (int)(Device.Info.ScaledScreenSize.Height / DataGrid.RowHeight * 1.5) - cachedRows.Count;
+			//exclude items already in the cache
+			n -= cachedRows.Count;
 
-			// Task.Run(() =>
-			// {
 			while (n-- > 0)
 				CreateCachedRow();
-			// });
-
-			//
-			// if (Height > 0)
-			// {
-			//     var count = ((Scroller.Height / DataGrid.RowHeight * 2) - cachedRows.Count) / 4;
-			//
-			//     for (var l = 0; l < 4; l++)
-			//     {
-			//         Device.BeginInvokeOnMainThread(async () =>
-			//         {
-			//             for (var j = 0; j < count; j++)
-			//             {
-			//                 CreateCachedRow();
-			//                 await Task.Delay(10);
-			//             }
-			//
-			//         });
-			//     }
-			// }
 		}
 
 		#endregion
@@ -765,6 +522,9 @@ namespace Xamarin.Forms.DataGrid
 
 		void ClearRowSelections()
 		{
+			if (Items == null)
+				return;
+			
 			foreach (var info in Items)
 			{
 				UpdateItemInfoSelection(info, false);

@@ -11,26 +11,9 @@ namespace Xamarin.Forms.DataGrid
 	public partial class NGDataGrid
 	{
 		#region Bindable properties
+
 		public static readonly BindableProperty HeaderBackgroundProperty =
-			BindableProperty.Create(nameof(HeaderBackground), typeof(Color), typeof(NGDataGrid), Color.White,
-				propertyChanged: (b, o, n) =>
-				{
-					var self = b as NGDataGrid;
-					if (self.HeaderView != null && !self.HeaderBordersVisible)
-						self.HeaderView.BackgroundColor = (Color)n;
-				});
-
-		public static readonly BindableProperty BorderColorProperty =
-			BindableProperty.Create(nameof(BorderColor), typeof(Color), typeof(NGDataGrid), Color.Black,
-				propertyChanged: (b, o, n) =>
-				{
-					var self = b as NGDataGrid;
-					if (self.HeaderBordersVisible)
-						self.HeaderView.BackgroundColor = (Color)n;
-
-					if (self.Columns != null && self.ItemsSource != null)
-						self.Reload();
-				});
+			BindableProperty.Create(nameof(HeaderBackground), typeof(Color), typeof(NGDataGrid), Color.White);
 
 		public static readonly BindableProperty RowsBackgroundColorPaletteProperty =
 			BindableProperty.Create(nameof(RowsBackgroundColorPalette), typeof(IColorProvider), typeof(NGDataGrid), new PaletteCollection { default(Color) },
@@ -117,17 +100,6 @@ namespace Xamarin.Forms.DataGrid
 		public static readonly BindableProperty IsRefreshingProperty =
 			BindableProperty.Create(nameof(IsRefreshing), typeof(bool), typeof(NGDataGrid), false, BindingMode.TwoWay);
 
-
-		public static readonly BindableProperty BorderThicknessProperty =
-			BindableProperty.Create(nameof(BorderThickness), typeof(Thickness), typeof(NGDataGrid), new Thickness(1),
-				propertyChanged: (b, o, n) =>
-				{
-					((NGDataGrid)b).OnBorderThicknessChanged(b, EventArgs.Empty);
-				});
-
-		public static readonly BindableProperty HeaderBordersVisibleProperty =
-			BindableProperty.Create(nameof(HeaderBordersVisible), typeof(bool), typeof(NGDataGrid), true,
-				propertyChanged: (b, o, n) => (b as NGDataGrid).HeaderView.BackgroundColor = (bool)n ? (b as NGDataGrid).BorderColor : (b as NGDataGrid).HeaderBackground);
 
 		public static readonly BindableProperty SortedColumnIndexProperty =
 			BindableProperty.Create(nameof(SortedColumnIndex), typeof(SortData), typeof(NGDataGrid), null, BindingMode.TwoWay,
@@ -222,11 +194,6 @@ namespace Xamarin.Forms.DataGrid
 			get; set;
 		}
 
-		public Color BorderColor
-		{
-			get => (Color)GetValue(BorderColorProperty);
-			set => SetValue(BorderColorProperty, value);
-		}
 
 		public IColorProvider RowsBackgroundColorPalette
 		{
@@ -295,17 +262,6 @@ namespace Xamarin.Forms.DataGrid
 			set => SetValue(IsRefreshingProperty, value);
 		}
 
-		public Thickness BorderThickness
-		{
-			get => (Thickness)GetValue(BorderThicknessProperty);
-			set => SetValue(BorderThicknessProperty, value);
-		}
-
-		public bool HeaderBordersVisible
-		{
-			get => (bool)GetValue(HeaderBordersVisibleProperty);
-			set => SetValue(HeaderBordersVisibleProperty, value);
-		}
 
 		public SortData SortedColumnIndex
 		{
