@@ -59,6 +59,10 @@ namespace Xamarin.Forms.DataGrid
 				TappedCallback = (v, o) =>
 {
 	Scroller.ScrollToAsync(0, Scroller.ScrollY + 1000, false);
+	DataGrid.GridLineWidth += 1;
+	DataGrid.HeaderGridLinesVisible = !DataGrid.HeaderGridLinesVisible;
+	DataGrid.GridLinesVisibility = (GridLineVisibility) Enum.ToObject(typeof(GridLineVisibility), (int)(DataGrid.GridLinesVisibility + 1) % 4);
+	
 }
 			});
 		}
@@ -76,6 +80,11 @@ namespace Xamarin.Forms.DataGrid
 			         || propertyName == nameof(DataGrid.SelectionColor))
 			{
 				UpdateContainerSelectionMode();
+			}
+			else if (propertyName == nameof(DataGrid.GridLinesVisibility) 
+			         || propertyName == nameof(DataGrid.GridLineWidth))
+			{
+				UpdateRowsGridLines();
 			}
 		}
 
@@ -547,7 +556,22 @@ namespace Xamarin.Forms.DataGrid
 		
 		
 		#endregion
-		
+
+		#region GridLines
+
+		void UpdateRowsGridLines()
+		{
+			foreach (var element in Children)
+			{
+				if (element is NGDataGridViewRow row)
+				{
+					row.SetNeedsLayout();
+					row.ForceLayout();
+				}
+			}
+		}
+
+		#endregion
 		
 		
 

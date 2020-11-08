@@ -131,7 +131,7 @@ namespace Xamarin.Forms.DataGrid
 
 		private bool needsLayout;
 
-		private void SetNeedsLayout()
+		internal void SetNeedsLayout()
 		{
 			needsLayout = true;
 		}

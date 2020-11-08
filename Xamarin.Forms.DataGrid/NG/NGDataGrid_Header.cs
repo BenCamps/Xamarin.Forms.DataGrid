@@ -10,6 +10,82 @@ namespace Xamarin.Forms.DataGrid
 	public partial class NGDataGrid
 	{
 
+		public static readonly BindableProperty HeaderHeightProperty =
+			BindableProperty.Create(nameof(HeaderHeight), typeof(int), typeof(NGDataGrid), 40,
+				propertyChanged: (b, o, n) =>
+				{
+					var self = b as NGDataGrid;
+					self.HeaderView.HeightRequest = (int)n;
+					self.InvalidateLayout();
+
+				});
+
+		public static readonly BindableProperty HeaderBackgroundProperty =
+			BindableProperty.Create(nameof(HeaderBackground), typeof(Color), typeof(NGDataGrid), Color.White);
+
+		public static readonly BindableProperty HeaderLabelStyleProperty =
+			BindableProperty.Create(nameof(HeaderLabelStyle), typeof(Style), typeof(NGDataGrid));
+
+		public static readonly BindableProperty HeaderFontSizeProperty =
+			BindableProperty.Create(nameof(HeaderFontSize), typeof(double), typeof(NGDataGrid), 13.0);
+
+		public static readonly BindableProperty HeaderFontFamilyProperty =
+			BindableProperty.Create(nameof(HeaderFontFamily), typeof(string), typeof(NGDataGrid), Font.Default.FontFamily);
+
+		public static readonly BindableProperty HeaderFontAttributesProperty =
+			BindableProperty.Create(nameof(HeaderFontAttributes), typeof(FontAttributes), typeof(NGDataGrid), Font.Default.FontAttributes);
+
+		
+		
+		public int HeaderHeight
+		{
+			get => (int)GetValue(HeaderHeightProperty);
+			set => SetValue(HeaderHeightProperty, value);
+		}
+
+		public Color HeaderBackground
+		{
+			get => (Color)GetValue(HeaderBackgroundProperty);
+			set => SetValue(HeaderBackgroundProperty, value);
+		}
+
+		[Obsolete("Please use HeaderLabelStyle", true)]
+		public Color HeaderTextColor
+		{
+			get; set;
+		}
+		
+		public Style HeaderLabelStyle
+		{
+			get => (Style)GetValue(HeaderLabelStyleProperty);
+			set => SetValue(HeaderLabelStyleProperty, value);
+		}
+
+		public double HeaderFontSize
+		{
+			get => (double)GetValue(HeaderFontSizeProperty);
+			set => SetValue(HeaderFontSizeProperty, value);
+		}
+
+		public string HeaderFontFamily
+		{
+			get => (string)GetValue(HeaderFontFamilyProperty);
+			set => SetValue(HeaderFontFamilyProperty, value);
+		}
+		
+		public FontAttributes HeaderFontAttributes
+		{
+			get => (FontAttributes)GetValue(HeaderFontAttributesProperty);
+			set => SetValue(HeaderFontAttributesProperty, value);
+		}
+		
+		
+
+		
+		
+		
+		
+		
 		internal double ComputedColumnsWidth = -1;
 
 		internal void InvalidateColumnsWidth()
@@ -37,7 +113,7 @@ namespace Xamarin.Forms.DataGrid
 
 		private void ComputeColumnsWidth()
 		{
-			if (ComputedColumnsWidth > -1 || Width <= 0)
+			if (ComputedColumnsWidth > -1 || Columns.Count == 0 || Width <= 0)
 				return;
 
 			var totalWidth = 0d;
@@ -72,6 +148,7 @@ namespace Xamarin.Forms.DataGrid
 			DataGridColumn prevColumn = null;
 			var x = 0d;
 			//distribute and compute x
+			var i = 0;
 			foreach (var column in Columns)
 			{
 				var gl = column.Width;
@@ -83,6 +160,7 @@ namespace Xamarin.Forms.DataGrid
 					totalWidth += column.ComputedWidth;
 				}
 
+				column.ColumnIndex = i++;
 				column.ComputedX = x;
 				x += column.ComputedWidth;
 				column.HeaderLabel.WidthRequest = column.ComputedWidth;
@@ -107,37 +185,29 @@ namespace Xamarin.Forms.DataGrid
 			SetColumnsBindingContext();
 
 			ComputeColumnsWidth();
-
-
+			
 			var hv = HeaderView as StackLayout;
+
 			hv.DisableLayout = true;
+			
 			hv.Children.Clear();
-			//HeaderView.ColumnDefinitions.Clear();
 			_sortingOrders.Clear();
-
-			//HeaderView.Padding = 0;//new Thickness(BorderThickness.Left, BorderThickness.Top, BorderThickness.Right, 0);
-			//HeaderView.ColumnSpacing = 0; //BorderThickness.HorizontalThickness / 2;
-			hv.Orientation = StackOrientation.Horizontal;
-			hv.Spacing = 0;
-			hv.Padding = 0;
-
+			
 			foreach (var col in Columns)
 			{
-				//HeaderView.ColumnDefinitions.Add(new ColumnDefinition { Width = col.Width });
-
 				var cell = CreateHeaderViewForColumn(col);
 
 				hv.Children.Add(cell);
-				//Grid.SetColumn(cell, Columns.IndexOf(col));
 
 				_sortingOrders.Add(Columns.IndexOf(col), SortingOrder.None);
 			}
 
 			hv.DisableLayout = false;
+			
 			hv.ForceLayout();
 		}
 
-		//this is not needed since the BindingContext is automatically inherited by children
+		//todo:is this needed?
 		private void SetColumnsBindingContext()
 		{
 			Columns?.ForEach(c => c.BindingContext = BindingContext);
@@ -179,7 +249,64 @@ namespace Xamarin.Forms.DataGrid
 			//
 			// return grid;
 
-			return column.HeaderLabel;
+			if (column.HeaderCell != null)
+			{
+				column.HeaderCell.ColumnIndex = column.ColumnIndex;
+				return column.HeaderCell;
+			}
+			
+			var cell = new NGDataGridViewCell();
+
+			var label = column.HeaderLabel;
+			
+			label.SetBinding(BackgroundColorProperty, new Binding(nameof(HeaderBackground), BindingMode.OneWay, source: this));
+			label.SetBinding(Label.FontFamilyProperty, new Binding(nameof(HeaderFontFamily), BindingMode.OneWay, source: this));
+			label.SetBinding(Label.FontSizeProperty, new Binding(nameof(HeaderFontSize), BindingMode.OneWay, source: this));
+			label.SetBinding(Label.FontAttributesProperty, new Binding(nameof(HeaderFontAttributes), BindingMode.OneWay, source: this));
+			
+			cell.ColumnIndex = column.ColumnIndex;
+			cell.Content = column.HeaderLabel;
+			cell.WidthRequest = column.ComputedWidth;
+			
+			//add grid line
+			BoxView vline = new BoxView();
+
+			vline.SetBinding(WidthRequestProperty, new Binding(nameof(GridLineWidth), BindingMode.OneWay, source: this));
+			vline.SetBinding(BackgroundColorProperty, new Binding(nameof(GridLineColor), BindingMode.OneWay, source: this));
+			vline.HorizontalOptions = LayoutOptions.Start;
+
+			cell.Children.Add(vline);
+
+			column.HeaderCell = cell;
+			
+			return cell;
+		}
+
+
+		private void UpdateHeaderGridLines()
+		{
+			foreach (var column in Columns)
+			{
+				var cell = column.HeaderCell;
+
+				if (cell == null)
+					continue;
+
+				cell.WidthRequest = column.ComputedWidth;
+				
+				var gridLine = (View) cell.Children.FirstOrDefault((x) => x is BoxView);
+
+				if (cell.ColumnIndex > 0 && (GridLinesVisibility == GridLineVisibility.Both || GridLinesVisibility == GridLineVisibility.Vertical))
+				{
+					gridLine.IsVisible = true;
+					cell.Content.Margin = new Thickness(GridLineWidth, 0,0,0);
+				}
+				else
+				{
+					gridLine.IsVisible = false;
+					cell.Content.Margin = 0;
+				}
+			}
 		}
 
 	}

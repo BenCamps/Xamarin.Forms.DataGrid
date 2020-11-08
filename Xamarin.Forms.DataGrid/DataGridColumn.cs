@@ -141,9 +141,12 @@ namespace Xamarin.Forms.DataGrid
 
 		internal Image SortingIcon;
 		internal Label HeaderLabel;
+		internal NGDataGridViewCell HeaderCell;
 
 		internal double ComputedX;
 		internal double ComputedWidth;
+
+		internal int ColumnIndex;
 		
 		
 		public DataGridColumn()

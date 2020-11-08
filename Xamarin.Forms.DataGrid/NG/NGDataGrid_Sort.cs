@@ -7,7 +7,118 @@ namespace Xamarin.Forms.DataGrid
 {
     public partial class NGDataGrid
     {
+	    public static readonly BindableProperty IsSortableProperty =
+		    BindableProperty.Create(nameof(IsSortable), typeof(bool), typeof(NGDataGrid), true);
+	    
+		public static readonly BindableProperty SortedColumnIndexProperty =
+			BindableProperty.Create(nameof(SortedColumnIndex), typeof(SortData), typeof(NGDataGrid), null, BindingMode.TwoWay,
+				validateValue: (b, v) =>
+				{
+					var self = b as NGDataGrid;
+					var sData = (SortData)v;
 
+					return
+						sData == null || //setted to null
+						self.Columns == null || // Columns binded but not setted
+						self.Columns.Count == 0 || //columns not setted yet
+						(sData.Index < self.Columns.Count && self.Columns.ElementAt(sData.Index).SortingEnabled);
+				},
+				propertyChanged: (b, o, n) =>
+				{
+					var self = b as NGDataGrid;
+					if (o != n)
+						self.SortItems((SortData)n);
+				});
+
+
+		public static readonly BindableProperty AscendingIconProperty =
+			BindableProperty.Create(nameof(AscendingIcon), typeof(ImageSource), typeof(NGDataGrid), ImageSource.FromResource("Xamarin.Forms.DataGrid.up.png", typeof(NGDataGrid).Assembly));
+
+		public static readonly BindableProperty DescendingIconProperty =
+			BindableProperty.Create(nameof(DescendingIcon), typeof(ImageSource), typeof(NGDataGrid), ImageSource.FromResource("Xamarin.Forms.DataGrid.down.png", typeof(NGDataGrid).Assembly));
+
+		public static readonly BindableProperty DescendingIconStyleProperty =
+			BindableProperty.Create(nameof(DescendingIconStyle), typeof(Style), typeof(NGDataGrid), null,
+
+				propertyChanged: (b, o, n) =>
+				{
+					var self = b as NGDataGrid;
+					var style = (n as Style).Setters.FirstOrDefault(x => x.Property == Image.SourceProperty);
+					if (style != null)
+					{
+						if (style.Value is string vs)
+							self.DescendingIcon = ImageSource.FromFile(vs);
+						else
+							self.DescendingIcon = (ImageSource)style.Value;
+					}
+				});
+
+		public static readonly BindableProperty AscendingIconStyleProperty =
+			BindableProperty.Create(nameof(AscendingIconStyle), typeof(Style), typeof(NGDataGrid), null,
+				coerceValue: (b, v) =>
+				{
+					var self = b as NGDataGrid;
+
+					return v;
+				},
+
+				propertyChanged: (b, o, n) =>
+				{
+					var self = b as NGDataGrid;
+					if ((n as Style).Setters.Any(x => x.Property == Image.SourceProperty))
+					{
+						var style = (n as Style).Setters.FirstOrDefault(x => x.Property == Image.SourceProperty);
+						if (style != null)
+						{
+							if (style.Value is string vs)
+								self.AscendingIcon = ImageSource.FromFile(vs);
+							else
+								self.AscendingIcon = (ImageSource)style.Value;
+						}
+					}
+				});
+
+		
+		public bool IsSortable
+		{
+			get => (bool)GetValue(IsSortableProperty);
+			set => SetValue(IsSortableProperty, value);
+		}
+		
+	    public SortData SortedColumnIndex
+	    {
+		    get => (SortData)GetValue(SortedColumnIndexProperty);
+		    set => SetValue(SortedColumnIndexProperty, value);
+	    }
+
+	    public ImageSource AscendingIcon
+	    {
+		    get => (ImageSource)GetValue(AscendingIconProperty);
+		    set => SetValue(AscendingIconProperty, value);
+	    }
+
+	    public ImageSource DescendingIcon
+	    {
+		    get => (ImageSource)GetValue(DescendingIconProperty);
+		    set => SetValue(DescendingIconProperty, value);
+	    }
+
+	    public Style AscendingIconStyle
+	    {
+		    get => (Style)GetValue(AscendingIconStyleProperty);
+		    set => SetValue(AscendingIconStyleProperty, value);
+	    }
+
+	    public Style DescendingIconStyle
+	    {
+		    get => (Style)GetValue(DescendingIconStyleProperty);
+		    set => SetValue(DescendingIconStyleProperty, value);
+	    }
+	    
+	    
+	    
+	    
+	    
 	    private readonly Dictionary<int, SortingOrder> _sortingOrders = new Dictionary<int, SortingOrder>();
 	    
 	    

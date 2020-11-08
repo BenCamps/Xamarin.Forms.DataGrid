@@ -43,7 +43,16 @@ namespace Xamarin.Forms.DataGrid
 			//Effects.Add(new ClipEffect());
 
 			//            HeaderScrollView = new NGDataGridScroller();
-			HeaderView = new StackLayout();
+			var headerView = new StackLayout
+			{
+				Orientation = StackOrientation.Horizontal,
+				Spacing = 0,
+			};
+
+			//if we go headless, TranslateX,Y don't have any effect
+			//CompressedLayout.SetIsHeadless(headerView, true);
+			
+			HeaderView = headerView;
 			RefreshView = new RefreshView();
 			Scroller = new NGDataGridScroller();
 			Container = new NGDataGridContainer(this, Scroller);
@@ -164,6 +173,7 @@ namespace Xamarin.Forms.DataGrid
 				clipRect.Rect = new Rect(x, y, width, height);
 
 			CreateHeaderView();
+			UpdateHeaderGridLines();
 			UpdateInternalItems();
 
 			//			if (HeaderView.Width != ComputedColumnsWidth || HeaderView.Height != HeaderHeight)
@@ -256,10 +266,11 @@ namespace Xamarin.Forms.DataGrid
 			base.OnPropertyChanged(propertyName);
 
 
-			if (propertyName == "Renderer")
+			if (propertyName == nameof(HeaderGridLinesVisible)
+			    || propertyName == nameof(GridLinesVisibility)
+			    || propertyName == nameof(GridLineWidth))
 			{
-
-
+				UpdateHeaderGridLines();
 			}
 
 		}
