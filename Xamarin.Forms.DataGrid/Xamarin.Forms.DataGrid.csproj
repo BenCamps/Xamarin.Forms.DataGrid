@@ -26,6 +26,8 @@
 	<ItemGroup>
 		<EmbeddedResource Include="down.png" />
 		<EmbeddedResource Include="up.png" />
+		<None Remove="Resources\Fonts\MaterialIconsOutlined-Regular.otf" />
+		<EmbeddedResource Include="Resources\Fonts\MaterialIconsOutlined-Regular.otf" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -278,6 +278,35 @@ namespace Xamarin.Forms.DataGrid
 			cell.Children.Add(vline);
 
 			column.HeaderCell = cell;
+
+			
+			// if (IsSortable)
+			// {
+				//column.SortingIcon.Style = (Style)_headerView.Resources["ImageStyleBase"];
+
+				column.SortingIcon.HorizontalOptions = LayoutOptions.End;
+				column.SortingIcon.WidthRequest = Math.Max(11, Math.Min(16, HeaderHeight));
+				
+				cell.Children.Add(column.SortingIcon);
+				
+				//Grid.SetColumn(column.SortingIcon, 1);
+
+				var tgr = new TapGestureRecognizer();
+				tgr.Tapped += (s, e) =>
+				{
+					if (!IsSortable)
+						return;
+					
+					int index = column.ColumnIndex; //Columns.IndexOf(column);
+					SortingOrder order = _sortingOrders[index] == SortingOrder.None ? SortingOrder.Ascendant 
+						: _sortingOrders[index] == SortingOrder.Ascendant ? SortingOrder.Descendant 
+						: SortingOrder.None;
+
+					if (column.SortingEnabled)
+						SortedColumnIndex = new SortData(index, order);
+				};
+				cell.Content.GestureRecognizers.Add(tgr);
+			// }
 			
 			return cell;
 		}

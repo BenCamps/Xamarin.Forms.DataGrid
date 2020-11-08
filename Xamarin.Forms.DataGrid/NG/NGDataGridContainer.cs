@@ -33,11 +33,18 @@ namespace Xamarin.Forms.DataGrid
 			{
 				if (itemsSource != value)
 				{
+					FreezeRows();
 					ReleaseItems();
 					itemsSource = value;
 					BuildItems(itemsSource);
 					InvalidateMeasure();
 					UpdateContainerSelectionMode();
+					if (doneFirstLayout)
+					{
+						ResetLastView();
+						LayoutRows();
+					}
+					UnfreezeRows();
 				}
 			}
 		}
@@ -106,13 +113,14 @@ namespace Xamarin.Forms.DataGrid
 		{
 			if (!doneFirstLayout && height > 0 && (Items?.Count ?? 0) > 0)
 			{
-				Device.BeginInvokeOnMainThread(() =>
-				{
-					OnScrolled(Scroller, new ScrolledEventArgs(Scroller.ScrollX, Scroller.ScrollY));
+				// Device.BeginInvokeOnMainThread(() =>
+				// {
+					//OnScrolled(Scroller, new ScrolledEventArgs(Scroller.ScrollX, Scroller.ScrollY));
+					LayoutRows();
 					doneFirstLayout = true;
 //					WarmUpCache();
 					//                InvalidateMeasure();
-				});
+				// });
 			}
 		}
 
@@ -136,7 +144,20 @@ namespace Xamarin.Forms.DataGrid
 		private double _lastViewStart = 0;
 		private double _lastViewEnd = 0;
 
+		void ResetLastView()
+		{
+			_lastViewStart = 0;
+			_lastViewEnd = 0;
+		}
+		
 		private void OnScrolled(object sender, ScrolledEventArgs e)
+		{
+			Device.BeginInvokeOnMainThread(LayoutRows);
+//			LayoutRows();
+		}
+
+		
+		private void LayoutRows()
 		{
 
 			// var sw = new Stopwatch();
@@ -147,7 +168,7 @@ namespace Xamarin.Forms.DataGrid
 				return; //nothing to show
 
 			//don't process items for negative scroll bounce
-			var scrollY = e.ScrollY;
+			var scrollY = Scroller.ScrollY;
 			var rowHeight = DataGrid.RowHeight;
 
 			var viewStart = _lastViewStart;
@@ -203,6 +224,7 @@ namespace Xamarin.Forms.DataGrid
 					});
 				}
 				else
+//				Device.BeginInvokeOnMainThread(() => Device.BeginInvokeOnMainThread(() => Device.BeginInvokeOnMainThread(ClearItems)));
 					ClearItems();
 
 				//LOCAL FUNCTION
@@ -211,12 +233,14 @@ namespace Xamarin.Forms.DataGrid
 					for (var i = GetItemIndexAt(clearStart); i < itemsCount; i++)
 					{
 						var info = Items[i];
+						var newScrollY = Scroller.ScrollY;
+						
 						if (isForward)
 						{
 							if (info.End <= clearEnd)
 							{
 								//protect against quick successive scrolls up and down 
-								if (info.End < e.ScrollY || info.Start >= e.ScrollY + windowHeight)
+								if (info.End < newScrollY || info.Start >= newScrollY + windowHeight)
 									DetachRow(info);
 							}
 							else
@@ -230,7 +254,7 @@ namespace Xamarin.Forms.DataGrid
 							if (info.Start >= clearStart)
 							{
 								//protect against quick successive scrolls up and down 
-								if (info.End < e.ScrollY || info.Start >= e.ScrollY + windowHeight)
+								if (info.End < newScrollY || info.Start >= newScrollY + windowHeight)
 									DetachRow(info);
 							}
 						}
@@ -441,6 +465,23 @@ namespace Xamarin.Forms.DataGrid
 			}
 		}
 
+
+		void FreezeRows()
+		{
+			foreach (View child in Children)
+			{
+				child.BatchBegin();
+			}
+		}
+
+		void UnfreezeRows()
+		{
+			foreach (View child in Children)
+			{
+				child.BatchCommit();
+			}
+		}
+		
 
 		void WarmUpCache()
 		{
