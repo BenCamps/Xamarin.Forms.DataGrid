@@ -28,8 +28,9 @@ namespace Xamarin.Forms.DataGrid
 		}
 		
 		
-		public int ColumnIndex { get; set; }
+		public DataGridColumn Column { get; set; }
 		
+		public bool IsFromTemplate { get; set; }
 		
 		
 		public NGDataGridViewCell()

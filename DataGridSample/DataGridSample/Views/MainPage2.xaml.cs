@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Xamarin.Forms;
+using Xamarin.Forms.DataGrid;
 
 namespace DataGridSample
 {
@@ -13,6 +14,16 @@ namespace DataGridSample
 		public MainPage2()
 		{
 			InitializeComponent();
+		}
+
+		private void NGDataGrid_OnQueryCellStyle(object sender, DataGridQueryCellStyleEventArgs e)
+		{
+
+			if (e.RowIndex == 3 && e.ColumnIndex == 2)
+			{
+				e.Handled = true;
+				e.Style.BackgroundColor = Color.Chocolate;
+			}
 		}
 	}
 }

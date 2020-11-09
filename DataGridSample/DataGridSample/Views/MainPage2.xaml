@@ -12,7 +12,7 @@
         <dg:NGDataGrid ItemsSource="{Binding Teams}" 
                        SelectedItem="{Binding SelectedTeam}"
                        RowHeight="40" 
-                       HeaderHeight="30" 
+                       HeaderHeight="60" 
                        HeaderBackground="#E0E6F8" 
                        SelectionColor="#8899AA"
                        SelectionMode="Single"
@@ -22,6 +22,7 @@
                        GridLineWidth="1"
                        GridLinesVisibility="Both"
                        HeaderGridLinesVisible="True"
+                       QueryCellStyle="NGDataGrid_OnQueryCellStyle"
                        >
             <dg:NGDataGrid.Columns>
                 <dg:DataGridColumn Title="Team" PropertyName="Name" Width="120"/>

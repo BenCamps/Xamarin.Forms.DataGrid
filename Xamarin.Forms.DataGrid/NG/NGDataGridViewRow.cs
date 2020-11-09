@@ -179,7 +179,7 @@ namespace Xamarin.Forms.DataGrid
 				else
 				{
 					var cellView = c as NGDataGridViewCell;
-					var colIndex = cellView.ColumnIndex;
+					var colIndex = cellView.Column.ColumnIndex;
 					
 					var cw = Math.Ceiling(g.GetComputedColumnWidth(colIndex));
 					var cx = x + Math.Ceiling(g.GetComputedColumnStart(colIndex));
@@ -269,11 +269,13 @@ namespace Xamarin.Forms.DataGrid
 				}
 
 				//bind content background as row background color
-				content.SetBinding(BackgroundColorProperty, new Binding(nameof(RowBackgroundColor), BindingMode.OneWay, source: this));
+				// content.SetBinding(BackgroundColorProperty, new Binding(nameof(RowBackgroundColor), BindingMode.OneWay, source: this));
+				content.BackgroundColor = RowBackgroundColor;
 
 				var cell = CreateCellView();
-				cell.ColumnIndex = colIndex;
+				cell.Column = col;
 				cell.Content = content;
+				cell.IsFromTemplate = col.CellTemplate != null;
 				
 				InternalChildren.Add(cell);
 			}
@@ -333,6 +335,43 @@ namespace Xamarin.Forms.DataGrid
 				RowForegroundColor = DataGrid.RowsTextColorPalette.GetColor(RowIndex, BindingContext);
 
 				//				ChangeChildrenColors();
+
+				//CellStyle
+
+				var shouldQuery = DataGrid.ShouldQueryCellStyle();
+				
+				foreach (var child in Children)
+				{
+					if (child is NGDataGridViewCell cell)
+					{
+						var bg = RowBackgroundColor;
+						var fg = RowForegroundColor;
+
+						if (shouldQuery)
+						{
+							//todo: add lookup of cell value for style, or remove it if user can access it from RowData
+							var style = DataGrid.NotifyQueryCellStyle(cell.Column, ItemInfo, null);
+							if (style != null)
+							{
+								if(!style.BackgroundColor.IsDefault)
+									bg = style.BackgroundColor;
+
+								if(!style.ForegroundColor.IsDefault)
+									fg = style.ForegroundColor;
+							}
+						}
+
+						cell.Content.BackgroundColor = bg;
+
+						if (!cell.IsFromTemplate)
+						{
+							var label = (Label) cell.Content;
+							label.TextColor = fg;
+						}
+					}
+				}
+
+
 				updateNeeded = false;
 			}
 		}

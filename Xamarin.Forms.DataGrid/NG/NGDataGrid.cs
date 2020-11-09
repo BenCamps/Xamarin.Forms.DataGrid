@@ -10,9 +10,10 @@ namespace Xamarin.Forms.DataGrid
 	//done: implement selection
 	//todo: implement grouping
 	//todo: implement group display expand/collapse
-	//todo: implement query cell colors
-	//todo: implement header cells sort and sort arrow
+	//done: implement query cell colors
+	//done: implement header cells sort and sort arrow
 	//todo: implement skiasharp label (with border support?)
+	//done: implement grid lines
 
 
 

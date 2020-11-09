@@ -251,7 +251,7 @@ namespace Xamarin.Forms.DataGrid
 
 			if (column.HeaderCell != null)
 			{
-				column.HeaderCell.ColumnIndex = column.ColumnIndex;
+				column.HeaderCell.Column = column;
 				return column.HeaderCell;
 			}
 			
@@ -264,7 +264,7 @@ namespace Xamarin.Forms.DataGrid
 			label.SetBinding(Label.FontSizeProperty, new Binding(nameof(HeaderFontSize), BindingMode.OneWay, source: this));
 			label.SetBinding(Label.FontAttributesProperty, new Binding(nameof(HeaderFontAttributes), BindingMode.OneWay, source: this));
 			
-			cell.ColumnIndex = column.ColumnIndex;
+			cell.Column = column;
 			cell.Content = column.HeaderLabel;
 			cell.WidthRequest = column.ComputedWidth;
 			
@@ -325,7 +325,7 @@ namespace Xamarin.Forms.DataGrid
 				
 				var gridLine = (View) cell.Children.FirstOrDefault((x) => x is BoxView);
 
-				if (cell.ColumnIndex > 0 && (GridLinesVisibility == GridLineVisibility.Both || GridLinesVisibility == GridLineVisibility.Vertical))
+				if (cell.Column.ColumnIndex > 0 && (GridLinesVisibility == GridLineVisibility.Both || GridLinesVisibility == GridLineVisibility.Vertical))
 				{
 					gridLine.IsVisible = true;
 					cell.Content.Margin = new Thickness(GridLineWidth, 0,0,0);
