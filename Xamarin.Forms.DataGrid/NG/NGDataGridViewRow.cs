@@ -3,18 +3,29 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using Xamarin.Forms.Internals;
 using Xamarin.Forms.Shapes;
+using System.Reflection;
 
 namespace Xamarin.Forms.DataGrid
 {
 	internal sealed class NGDataGridViewRow : DeafLayout
 	{
 		#region Fields
-		
+
 		Color _bgColor;
 		Color _textColor;
-		
+
 		BoxView HorizontalGridLineView;
+
+		static BindablePropertyKey RowXProperty;
+		static BindablePropertyKey RowYProperty;
+
+		static NGDataGridViewRow()
+		{
+			RowXProperty = (BindablePropertyKey)typeof(VisualElement).GetField("XPropertyKey", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null);
+			RowYProperty = (BindablePropertyKey)typeof(VisualElement).GetField("YPropertyKey", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null);
+		}
 
 		#endregion
 
@@ -31,16 +42,24 @@ namespace Xamarin.Forms.DataGrid
 				NumberOfTapsRequired = 1,
 				TappedCallback = (v, o) => { RowTapped(); }
 			});
-			
+
 			//Setup the grid line view
 			HorizontalGridLineView = new BoxView();
 			HorizontalGridLineView.SetBinding(BackgroundColorProperty, new Binding(nameof(DataGrid.GridLineColor), BindingMode.OneWay, source: DataGrid));
 			HorizontalGridLineView.SetBinding(HeightRequestProperty, new Binding(nameof(DataGrid.GridLineWidth), BindingMode.OneWay, source: DataGrid));
 			HorizontalGridLineView.VerticalOptions = LayoutOptions.Start;
-			
+
 			InternalChildren.Add(HorizontalGridLineView);
 		}
 
+
+		public void SetPosition(double x, double y)
+		{
+			BatchBegin();
+			SetValue(RowXProperty, x);
+			SetValue(RowYProperty, y);
+			BatchCommit();
+		}
 
 		#region properties
 		public NGDataGrid DataGrid
@@ -139,18 +158,18 @@ namespace Xamarin.Forms.DataGrid
 
 		protected override void LayoutChildren(double x, double y, double width, double height)
 		{
-			Debug.WriteLine($"Row Layout {x},{y} {width},{height}");
-
 			if (!needsLayout)
 				return;
 
 			needsLayout = false;
 
+			Debug.WriteLine($"Row Layout {x},{y} {width},{height}");
+
 			var g = DataGrid;
 
 			var cy = y;
-			var ch = (double) g.RowHeight;
-			
+			var ch = (double)g.RowHeight;
+
 			var boxRect = new Rectangle(x, y, width, height);
 
 			var gridLineVisibility = DataGrid.GridLinesVisibility;
@@ -168,19 +187,19 @@ namespace Xamarin.Forms.DataGrid
 			{
 				HorizontalGridLineView.IsVisible = false;
 			}
-			
+
 			foreach (View c in Children)
 			{
 				if (!c.IsVisible)
 					continue;
-				
+
 				if (c is BoxView)
 					LayoutChildIntoBoundingRegion(c, boxRect);
 				else
 				{
 					var cellView = c as NGDataGridViewCell;
 					var colIndex = cellView.Column.ColumnIndex;
-					
+
 					var cw = Math.Ceiling(g.GetComputedColumnWidth(colIndex));
 					var cx = x + Math.Ceiling(g.GetComputedColumnStart(colIndex));
 					var r = new Rectangle(cx, cy, cw, ch);
@@ -195,9 +214,9 @@ namespace Xamarin.Forms.DataGrid
 					else
 					{
 						gridLine.IsVisible = true;
-						cellView.Content.Margin = new Thickness(gridLine.WidthRequest, 0,0,0);
+						cellView.Content.Margin = new Thickness(gridLine.WidthRequest, 0, 0, 0);
 					}
-					
+
 					if (c.Width != cw || c.Height != ch)
 						c.Layout(r);
 				}
@@ -233,7 +252,7 @@ namespace Xamarin.Forms.DataGrid
 			foreach (var col in DataGrid.Columns)
 			{
 				var colIndex = i++;
-				
+
 				View content;
 
 				if (col.CellTemplate != null)
@@ -276,7 +295,7 @@ namespace Xamarin.Forms.DataGrid
 				cell.Column = col;
 				cell.Content = content;
 				cell.IsFromTemplate = col.CellTemplate != null;
-				
+
 				InternalChildren.Add(cell);
 			}
 
@@ -296,11 +315,11 @@ namespace Xamarin.Forms.DataGrid
 			vline.HorizontalOptions = LayoutOptions.Start;
 
 			cell.Children.Add(vline);
-			
+
 			return cell;
 		}
-		
-		
+
+
 
 		//used to prevent multiple updates when setting RowContext and Index properties
 		private bool updateNeeded;
@@ -339,7 +358,7 @@ namespace Xamarin.Forms.DataGrid
 				//CellStyle
 
 				var shouldQuery = DataGrid.ShouldQueryCellStyle();
-				
+
 				foreach (var child in Children)
 				{
 					if (child is NGDataGridViewCell cell)
@@ -353,10 +372,10 @@ namespace Xamarin.Forms.DataGrid
 							var style = DataGrid.NotifyQueryCellStyle(cell.Column, ItemInfo, null);
 							if (style != null)
 							{
-								if(!style.BackgroundColor.IsDefault)
+								if (!style.BackgroundColor.IsDefault)
 									bg = style.BackgroundColor;
 
-								if(!style.ForegroundColor.IsDefault)
+								if (!style.ForegroundColor.IsDefault)
 									fg = style.ForegroundColor;
 							}
 						}
@@ -365,7 +384,7 @@ namespace Xamarin.Forms.DataGrid
 
 						if (!cell.IsFromTemplate)
 						{
-							var label = (Label) cell.Content;
+							var label = (Label)cell.Content;
 							label.TextColor = fg;
 						}
 					}
@@ -375,7 +394,7 @@ namespace Xamarin.Forms.DataGrid
 				updateNeeded = false;
 			}
 		}
-		
+
 		// private void ChangeChildrenColors()
 		// {
 		// 	foreach (var v in Children)
@@ -406,17 +425,17 @@ namespace Xamarin.Forms.DataGrid
 			if (Parent != null)
 			{
 				//				DataGrid.AddAttachedRow(this);
-//				DataGrid.ItemSelected += DataGrid_ItemSelected;
+				//				DataGrid.ItemSelected += DataGrid_ItemSelected;
 			}
 			else
 			{
 				//				DataGrid.RemoveAttachedRow(this);
-//				DataGrid.ItemSelected -= DataGrid_ItemSelected;
+				//				DataGrid.ItemSelected -= DataGrid_ItemSelected;
 			}
 
 			SetNeedsLayout();
 		}
-		
+
 
 		// private void DataGrid_ItemSelected(object sender, SelectedItemChangedEventArgs e)
 		// {
@@ -433,7 +452,7 @@ namespace Xamarin.Forms.DataGrid
 		{
 			DataGrid.Container.SelectRow(ItemInfo);
 		}
-		
+
 		internal void UpdateSelection()
 		{
 			InvalidateBackground();
@@ -441,7 +460,7 @@ namespace Xamarin.Forms.DataGrid
 		}
 
 		#endregion
-		
+
 
 		// private NGDataGrid GetDataGridParent()
 		// {

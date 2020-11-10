@@ -37,14 +37,14 @@ namespace Xamarin.Forms.DataGrid
 					ReleaseItems();
 					itemsSource = value;
 					BuildItems(itemsSource);
-					InvalidateMeasure();
 					UpdateContainerSelectionMode();
-					if (doneFirstLayout)
-					{
-						ResetLastView();
-						LayoutRows();
-					}
+					//if (doneFirstLayout)
+					//{
+					ResetLastView();
+					LayoutRows();
+					//}
 					UnfreezeRows();
+					InvalidateMeasure();
 				}
 			}
 		}
@@ -68,8 +68,8 @@ namespace Xamarin.Forms.DataGrid
 	Scroller.ScrollToAsync(0, Scroller.ScrollY + 1000, false);
 	DataGrid.GridLineWidth += 1;
 	DataGrid.HeaderGridLinesVisible = !DataGrid.HeaderGridLinesVisible;
-	DataGrid.GridLinesVisibility = (GridLineVisibility) Enum.ToObject(typeof(GridLineVisibility), (int)(DataGrid.GridLinesVisibility + 1) % 4);
-	
+	DataGrid.GridLinesVisibility = (GridLineVisibility)Enum.ToObject(typeof(GridLineVisibility), (int)(DataGrid.GridLinesVisibility + 1) % 4);
+
 }
 			});
 		}
@@ -78,18 +78,18 @@ namespace Xamarin.Forms.DataGrid
 		{
 			var propertyName = e.PropertyName;
 
-			if (propertyName == nameof(DataGrid.SelectedItem) 
-			    || propertyName == nameof(DataGrid.SelectedItems))
+			if (propertyName == nameof(DataGrid.SelectedItem)
+				|| propertyName == nameof(DataGrid.SelectedItems))
 			{
 				UpdateContainerSelection();
 			}
-			else if (propertyName == nameof(DataGrid.SelectionMode) 
-			         || propertyName == nameof(DataGrid.SelectionColor))
+			else if (propertyName == nameof(DataGrid.SelectionMode)
+					 || propertyName == nameof(DataGrid.SelectionColor))
 			{
 				UpdateContainerSelectionMode();
 			}
-			else if (propertyName == nameof(DataGrid.GridLinesVisibility) 
-			         || propertyName == nameof(DataGrid.GridLineWidth))
+			else if (propertyName == nameof(DataGrid.GridLinesVisibility)
+					 || propertyName == nameof(DataGrid.GridLineWidth))
 			{
 				UpdateRowsGridLines();
 			}
@@ -111,16 +111,22 @@ namespace Xamarin.Forms.DataGrid
 		private bool doneFirstLayout;
 		protected override void LayoutChildren(double x, double y, double width, double height)
 		{
-			if (!doneFirstLayout && height > 0 && (Items?.Count ?? 0) > 0)
+			//if (!doneFirstLayout && height > 0 && (Items?.Count ?? 0) > 0)
 			{
-				// Device.BeginInvokeOnMainThread(() =>
-				// {
-					//OnScrolled(Scroller, new ScrolledEventArgs(Scroller.ScrollX, Scroller.ScrollY));
+				if (Device.RuntimePlatform == Device.macOS)
+				{
+					Device.BeginInvokeOnMainThread(async () =>
+					{
+						await Task.Delay(100);
+						LayoutRows();
+						doneFirstLayout = true;
+					});
+				}
+				else
+				{
 					LayoutRows();
 					doneFirstLayout = true;
-//					WarmUpCache();
-					//                InvalidateMeasure();
-				// });
+				}
 			}
 		}
 
@@ -149,21 +155,21 @@ namespace Xamarin.Forms.DataGrid
 			_lastViewStart = 0;
 			_lastViewEnd = 0;
 		}
-		
+
 		private void OnScrolled(object sender, ScrolledEventArgs e)
 		{
-			Device.BeginInvokeOnMainThread(LayoutRows);
-//			LayoutRows();
+			//Device.BeginInvokeOnMainThread(LayoutRows);
+			LayoutRows();
 		}
 
-		
+
 		private void LayoutRows()
 		{
 
 			// var sw = new Stopwatch();
 			// sw.Start();
 			// Debug.WriteLine($"Container.Scrolled {e.ScrollX},{e.ScrollY} X6");
-			
+
 			if (Items == null || Items.Count == 0)
 				return; //nothing to show
 
@@ -177,10 +183,10 @@ namespace Xamarin.Forms.DataGrid
 			var windowHeight = Scroller.Height;
 			var windowStart = scrollY;
 			var windowEnd = windowStart + windowHeight;
-			
+
 			var itemsCount = Items.Count;
 
-			var isForward = windowStart >= viewStart; 
+			var isForward = windowStart >= viewStart;
 
 
 			//Algo 4 -
@@ -224,7 +230,7 @@ namespace Xamarin.Forms.DataGrid
 					});
 				}
 				else
-//				Device.BeginInvokeOnMainThread(() => Device.BeginInvokeOnMainThread(() => Device.BeginInvokeOnMainThread(ClearItems)));
+					//				Device.BeginInvokeOnMainThread(() => Device.BeginInvokeOnMainThread(() => Device.BeginInvokeOnMainThread(ClearItems)));
 					ClearItems();
 
 				//LOCAL FUNCTION
@@ -234,7 +240,7 @@ namespace Xamarin.Forms.DataGrid
 					{
 						var info = Items[i];
 						var newScrollY = Scroller.ScrollY;
-						
+
 						if (isForward)
 						{
 							if (info.End <= clearEnd)
@@ -283,7 +289,7 @@ namespace Xamarin.Forms.DataGrid
 				// 	Debug.WriteLine($"Scroll Attach: Rows {Children.Count - cachedRows.Count} Cache {cachedRows.Count} Ellapsed {sw.ElapsedMilliseconds}ms Clear {clearStart}-{clearEnd} Show {showStart}-{showEnd} Distance {windowStart - viewStart}");
 			}
 
-			
+
 			//set the last view
 			_lastViewStart = windowStart;
 			_lastViewEnd = windowEnd;
@@ -362,8 +368,7 @@ namespace Xamarin.Forms.DataGrid
 
 			row.Opacity = 0;
 			// row.IsVisible = false;
-			//row.ItemInfo = null;
-
+			
 			cachedRows.Enqueue(row);
 
 			// Device.BeginInvokeOnMainThread(() =>
@@ -380,6 +385,7 @@ namespace Xamarin.Forms.DataGrid
 			CreateCachedRow();
 			CreateCachedRow();
 		}
+
 
 		void AttacheRow(ItemInfo info)
 		{
@@ -401,12 +407,15 @@ namespace Xamarin.Forms.DataGrid
 
 			info.View = row;
 
-			//row.BatchBegin();
-			row.TranslationY = info.Y;
+			row.BatchBegin();
+			// row.TranslationY = info.Y;
+
 			row.ItemInfo = info;
+			row.SetPosition(0, info.Y);
+			
 			// row.IsVisible = true;
 			row.Opacity = 1;
-			//row.BatchCommit();
+			row.BatchCommit();
 		}
 
 
@@ -420,6 +429,7 @@ namespace Xamarin.Forms.DataGrid
 			// row.BatchBegin();
 			row.Opacity = 0;
 			// row.IsVisible = false;
+
 			if (unbind)
 				row.ItemInfo = null;
 			// row.BatchCommit();
@@ -481,15 +491,15 @@ namespace Xamarin.Forms.DataGrid
 				child.BatchCommit();
 			}
 		}
-		
+
 
 		void WarmUpCache()
 		{
 			if (Width == -1 || Height == -1)
 				return;
-			
+
 			//estimate double the items needed for 1 frame
-			var n = (int) (Height / DataGrid.RowHeight * 2);
+			var n = (int)(Height / DataGrid.RowHeight * 2);
 
 			if (Items != null && Items.Count <= n)
 				return;
@@ -510,25 +520,27 @@ namespace Xamarin.Forms.DataGrid
 		{
 			if (info == null)
 				return;
-			
+
 			switch (DataGrid.SelectionMode)
 			{
 				case SelectionMode.None:
 					break;
 				case SelectionMode.Single:
-				{
-					DataGrid.SetValueFromRenderer(NGDataGrid.SelectedItemProperty, info.Item);
-				} break;
+					{
+						DataGrid.SetValueFromRenderer(NGDataGrid.SelectedItemProperty, info.Item);
+					}
+					break;
 				case SelectionMode.Multiple:
-				{
-					//this is called when a row is tapped. 
-					//if info.Selected == false, select the items
-					//if true, deselect the item
-					if (info.Selected)
-						DataGrid.SelectedItems.Remove(info.Item);
-					else
-						DataGrid.SelectedItems.Add(info.Item);
-				} break;
+					{
+						//this is called when a row is tapped. 
+						//if info.Selected == false, select the items
+						//if true, deselect the item
+						if (info.Selected)
+							DataGrid.SelectedItems.Remove(info.Item);
+						else
+							DataGrid.SelectedItems.Add(info.Item);
+					}
+					break;
 			}
 		}
 
@@ -539,18 +551,20 @@ namespace Xamarin.Forms.DataGrid
 				case SelectionMode.None:
 					break;
 				case SelectionMode.Single:
-				{
-					ClearRowSelections();
-					UpdateItemSelection(DataGrid.SelectedItem, true);
-				} break;
-				case SelectionMode.Multiple:
-				{
-					ClearRowSelections();
-					foreach (var item in DataGrid.SelectedItems)
 					{
-						UpdateItemSelection(item, true);
+						ClearRowSelections();
+						UpdateItemSelection(DataGrid.SelectedItem, true);
 					}
-				} break;
+					break;
+				case SelectionMode.Multiple:
+					{
+						ClearRowSelections();
+						foreach (var item in DataGrid.SelectedItems)
+						{
+							UpdateItemSelection(item, true);
+						}
+					}
+					break;
 			}
 		}
 
@@ -566,7 +580,7 @@ namespace Xamarin.Forms.DataGrid
 				case SelectionMode.Multiple:
 					break;
 			}
-			
+
 			UpdateContainerSelection();
 		}
 
@@ -574,7 +588,7 @@ namespace Xamarin.Forms.DataGrid
 		{
 			if (Items == null)
 				return;
-			
+
 			foreach (var info in Items)
 			{
 				UpdateItemInfoSelection(info, false);
@@ -585,17 +599,17 @@ namespace Xamarin.Forms.DataGrid
 		{
 			UpdateItemInfoSelection(GetItemInfoFor(item), selected);
 		}
-		
+
 		void UpdateItemInfoSelection(ItemInfo itemInfo, bool selected)
 		{
-			if (itemInfo == null || itemInfo.Selected == selected) 
+			if (itemInfo == null || itemInfo.Selected == selected)
 				return;
-			
+
 			itemInfo.Selected = selected;
 			itemInfo.View?.UpdateSelection();
 		}
-		
-		
+
+
 		#endregion
 
 		#region GridLines
@@ -613,8 +627,8 @@ namespace Xamarin.Forms.DataGrid
 		}
 
 		#endregion
-		
-		
+
+
 
 	}
 
