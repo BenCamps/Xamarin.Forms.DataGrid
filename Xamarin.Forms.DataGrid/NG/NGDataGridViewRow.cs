@@ -9,159 +9,49 @@ using System.Reflection;
 
 namespace Xamarin.Forms.DataGrid
 {
-	internal sealed class NGDataGridViewRow : DeafLayout
+	internal sealed class NGDataGridViewRow : NGDataGridViewItem
 	{
 		#region Fields
-
-		Color _bgColor;
-		Color _textColor;
-
-		BoxView HorizontalGridLineView;
-
-		static BindablePropertyKey RowXProperty;
-		static BindablePropertyKey RowYProperty;
-
-		static NGDataGridViewRow()
-		{
-			RowXProperty = (BindablePropertyKey)typeof(VisualElement).GetField("XPropertyKey", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null);
-			RowYProperty = (BindablePropertyKey)typeof(VisualElement).GetField("YPropertyKey", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null);
-		}
-
+		
 		#endregion
 
 
-		public NGDataGridViewRow(NGDataGrid dg)
-		{
-			//empty
-			BackgroundColor = Color.PaleGreen;
-			DataGrid = dg;
+		public NGDataGridViewRow(NGDataGrid dg) : base(dg)
+		{ }
 
-			//handle row selection
-			GestureRecognizers.Add(new TapGestureRecognizer
-			{
-				NumberOfTapsRequired = 1,
-				TappedCallback = (v, o) => { RowTapped(); }
-			});
-
-			//Setup the grid line view
-			HorizontalGridLineView = new BoxView();
-			HorizontalGridLineView.SetBinding(BackgroundColorProperty, new Binding(nameof(DataGrid.GridLineColor), BindingMode.OneWay, source: DataGrid));
-			HorizontalGridLineView.SetBinding(HeightRequestProperty, new Binding(nameof(DataGrid.GridLineWidth), BindingMode.OneWay, source: DataGrid));
-			HorizontalGridLineView.VerticalOptions = LayoutOptions.Start;
-
-			InternalChildren.Add(HorizontalGridLineView);
-		}
-
-
-		public void SetPosition(double x, double y)
-		{
-			BatchBegin();
-			SetValue(RowXProperty, x);
-			SetValue(RowYProperty, y);
-			BatchCommit();
-		}
-
+		
 		#region properties
-		public NGDataGrid DataGrid
-		{
-			get => (NGDataGrid)GetValue(DataGridProperty);
-			set => SetValue(DataGridProperty, value);
-		}
-
-		//private int _index = -1;
-
-		// public int RowIndex
-		// {
-		// 	get
-		// 	{
-		// 		if (_index == -1 && ItemInfo != null)
-		// 			_index = DataGrid.InternalItems?.IndexOf(RowContext) ?? -1;
-		//
-		// 		return _index;
-		// 	}
-		// 	
-		// 	private set =>_index = value;
-		// } 
-
-		private int RowIndex => ItemInfo?.Index ?? -1;
-
+		
 		private bool IsItemSelected => ItemInfo?.Selected ?? false;
+		
+		#endregion
 
-		internal ItemInfo ItemInfo
-		{
-			get => (ItemInfo)GetValue(ItemInfoProperty);
-			set => SetValue(ItemInfoProperty, value);
-		}
+		
+		#region Bindable Properties
 
-		// public object RowContext
-		// {
-		// 	get => GetValue(RowContextProperty);
-		// 	set => SetValue(RowContextProperty, value);
-		// }
-
-		public Color RowBackgroundColor
-		{
-			get => (Color)GetValue(RowBackgroundColorProperty);
-			set => SetValue(RowBackgroundColorProperty, value);
-		}
-
+		public static readonly BindableProperty RowBorderColorProperty =
+			BindableProperty.Create(nameof(RowBorderColor), typeof(Color), typeof(NGDataGridViewRow), Color.Transparent);
+		
 		public Color RowBorderColor
 		{
 			get => (Color)GetValue(RowBorderColorProperty);
 			set => SetValue(RowBorderColorProperty, value);
 		}
 
-		public Color RowForegroundColor
-		{
-			get => (Color)GetValue(RowForegroundColorProperty);
-			set => SetValue(RowForegroundColorProperty, value);
-		}
-
-
-		#endregion
-
-		#region Bindable Properties
-		public static readonly BindableProperty DataGridProperty =
-			BindableProperty.Create(nameof(DataGrid), typeof(NGDataGrid), typeof(NGDataGridViewRow), null,
-				propertyChanged: (b, o, n) => ((NGDataGridViewRow)b).CreateView());
-
-		// public static readonly BindableProperty RowContextProperty =
-		// 	BindableProperty.Create(nameof(RowContext), typeof(object), typeof(NGDataGridViewRow)/*,
-		// 		propertyChanged: (b, o, n) => ((NGDataGridViewRow)b).RowIndex = -1*/);
-
-		public static readonly BindableProperty RowBackgroundColorProperty =
-			BindableProperty.Create(nameof(RowBackgroundColor), typeof(Color), typeof(NGDataGridViewRow), Color.Transparent);
-
-		public static readonly BindableProperty RowBorderColorProperty =
-			BindableProperty.Create(nameof(RowBorderColor), typeof(Color), typeof(NGDataGridViewRow), Color.Transparent);
-
-		public static readonly BindableProperty RowForegroundColorProperty =
-			BindableProperty.Create(nameof(RowForegroundColor), typeof(Color), typeof(NGDataGridViewRow), Color.Transparent);
-
-
-		public static readonly BindableProperty ItemInfoProperty =
-			BindableProperty.Create(nameof(ItemInfo), typeof(ItemInfo), typeof(NGDataGridViewRow),
-				propertyChanged: (b, o, n) => ((NGDataGridViewRow)b).BindingContext = (n as ItemInfo)?.Item);
-
 		#endregion
 
 
 		#region Layout
-
-		private bool needsLayout;
-
-		internal void SetNeedsLayout()
-		{
-			needsLayout = true;
-		}
-
-
+		
 		protected override void LayoutChildren(double x, double y, double width, double height)
 		{
-			if (!needsLayout)
+			if (!NeedsLayout)
 				return;
 
-			needsLayout = false;
+			SetNeedsLayout(false);
+			
+			base.LayoutChildren(x, y, width, height);
+			
 
 			Debug.WriteLine($"Row Layout {x},{y} {width},{height}");
 
@@ -179,13 +69,8 @@ namespace Xamarin.Forms.DataGrid
 			//show the grid line and adjust child layout area
 			if (showHorizontalLines)
 			{
-				HorizontalGridLineView.IsVisible = true;
 				cy += DataGrid.GridLineWidth;
 				ch -= DataGrid.GridLineWidth;
-			}
-			else
-			{
-				HorizontalGridLineView.IsVisible = false;
 			}
 
 			foreach (View c in Children)
@@ -193,18 +78,16 @@ namespace Xamarin.Forms.DataGrid
 				if (!c.IsVisible)
 					continue;
 
-				if (c is BoxView)
-					LayoutChildIntoBoundingRegion(c, boxRect);
-				else
+				if (c is NGDataGridViewCell cellView)
 				{
-					var cellView = c as NGDataGridViewCell;
 					var colIndex = cellView.Column.ColumnIndex;
 
 					var cw = Math.Ceiling(g.GetComputedColumnWidth(colIndex));
 					var cx = x + Math.Ceiling(g.GetComputedColumnStart(colIndex));
 					var r = new Rectangle(cx, cy, cw, ch);
 
-					var gridLine = cellView.Children[1] as View;
+					var gridLine = (View) cellView.Children[1];
+					
 					//adjust for gridLine
 					if (colIndex == 0 || !showVerticalLines)
 					{
@@ -222,29 +105,12 @@ namespace Xamarin.Forms.DataGrid
 				}
 			}
 		}
-
-		protected override void OnSizeAllocated(double width, double height)
-		{
-			// shortcut the LayoutChildren call and ignore everything
-			// done in Layout.OnSizeAllocated because it is just overhead for us.
-			//base.OnSizeAllocated(width, height);
-
-			LayoutChildren(0, 0, width, height);
-		}
-
-		protected override SizeRequest OnMeasure(double widthConstraint, double heightConstraint)
-		{
-			//return base.OnMeasure(widthConstraint, heightConstraint);
-
-			var sr = new SizeRequest(new Size(DataGrid.ComputedColumnsWidth, DataGrid.RowHeight));
-			return sr;
-		}
-
+		
 		#endregion
 
 
 		#region Methods
-		private void CreateView()
+		protected override void CreateView()
 		{
 			HeightRequest = DataGrid.RowHeight;
 
@@ -282,14 +148,14 @@ namespace Xamarin.Forms.DataGrid
 					text.SetBinding(Label.FontFamilyProperty, new Binding(NGDataGrid.FontFamilyProperty.PropertyName, BindingMode.Default, source: DataGrid));
 
 					//bind text color
-					text.SetBinding(Label.TextColorProperty, new Binding(nameof(RowForegroundColor), BindingMode.OneWay, source: this));
+					text.SetBinding(Label.TextColorProperty, new Binding(nameof(ItemForegroundColor), BindingMode.OneWay, source: this));
 
 					content = text;
 				}
 
 				//bind content background as row background color
 				// content.SetBinding(BackgroundColorProperty, new Binding(nameof(RowBackgroundColor), BindingMode.OneWay, source: this));
-				content.BackgroundColor = RowBackgroundColor;
+				content.BackgroundColor = ItemBackgroundColor;
 
 				var cell = CreateCellView();
 				cell.Column = col;
@@ -303,6 +169,7 @@ namespace Xamarin.Forms.DataGrid
 			//InvalidateBackground();
 		}
 
+		
 		private NGDataGridViewCell CreateCellView()
 		{
 			var cell = new NGDataGridViewCell();
@@ -320,38 +187,19 @@ namespace Xamarin.Forms.DataGrid
 		}
 
 
-
-		//used to prevent multiple updates when setting RowContext and Index properties
-		private bool updateNeeded;
-
-		private void InvalidateBackground()
+		
+		protected override void OnUpdateColors()
 		{
-			if (DataGrid == null || ItemInfo == null || updateNeeded)
-				return;
+			// if (!updateNeeded)
+			// 	return;
 
-			updateNeeded = true;
-
-			//defer execution for 10ms until other properties and context have been updated.
-			// Action a = async () =>
-			// {
-			// await Task.Delay(4); 
-			UpdateBackgroundColor();
-			// };
-			// a.Invoke();
-		}
-
-		private void UpdateBackgroundColor()
-		{
-			if (!updateNeeded)
-				return;
-
-			if (RowIndex > -1)
+			if (ItemIndex > -1)
 			{
-				RowBackgroundColor = IsItemSelected
+				ItemBackgroundColor = IsItemSelected
 					? DataGrid.SelectionColor
-					: DataGrid.RowsBackgroundColorPalette.GetColor(RowIndex, BindingContext);
+					: DataGrid.RowsBackgroundColorPalette.GetColor(ItemIndex, BindingContext);
 
-				RowForegroundColor = DataGrid.RowsTextColorPalette.GetColor(RowIndex, BindingContext);
+				ItemForegroundColor = DataGrid.RowsTextColorPalette.GetColor(ItemIndex, BindingContext);
 
 				//				ChangeChildrenColors();
 
@@ -363,8 +211,8 @@ namespace Xamarin.Forms.DataGrid
 				{
 					if (child is NGDataGridViewCell cell)
 					{
-						var bg = RowBackgroundColor;
-						var fg = RowForegroundColor;
+						var bg = ItemBackgroundColor;
+						var fg = ItemForegroundColor;
 
 						if (shouldQuery)
 						{
@@ -391,113 +239,21 @@ namespace Xamarin.Forms.DataGrid
 				}
 
 
-				updateNeeded = false;
+				// updateNeeded = false;
 			}
 		}
-
-		// private void ChangeChildrenColors()
-		// {
-		// 	foreach (var v in Children)
-		// 	{
-		// 		v.BackgroundColor = _bgColor;
-		//
-		// 		if (v is Label label)
-		// 			label.TextColor = _textColor;
-		// 		else if (v is ContentView contentView && contentView.Content is Label label2)
-		// 			label2.TextColor = _textColor;
-		// 	}
-		// }
-
-		protected override void OnBindingContextChanged()
-		{
-			base.OnBindingContextChanged();
-
-			InvalidateBackground();
-		}
-
-		protected override void OnParentSet()
-		{
-			base.OnParentSet();
-
-			// DataGrid = GetDataGridParent();
-			// Container = GetContainerParent();
-
-			if (Parent != null)
-			{
-				//				DataGrid.AddAttachedRow(this);
-				//				DataGrid.ItemSelected += DataGrid_ItemSelected;
-			}
-			else
-			{
-				//				DataGrid.RemoveAttachedRow(this);
-				//				DataGrid.ItemSelected -= DataGrid_ItemSelected;
-			}
-
-			SetNeedsLayout();
-		}
-
-
-		// private void DataGrid_ItemSelected(object sender, SelectedItemChangedEventArgs e)
-		// {
-		// 	if (DataGrid.SelectionEnabled && (e.SelectedItem == BindingContext || IsItemSelected))
-		// 	{
-		// 		InvalidateBackground();
-		// 	}
-		// }
+		
 		#endregion
 
 		#region Selection
 
-		private void RowTapped()
+		protected override void OnTapped()
 		{
 			DataGrid.Container.SelectRow(ItemInfo);
 		}
 
-		internal void UpdateSelection()
-		{
-			InvalidateBackground();
-			UpdateBackgroundColor();
-		}
-
 		#endregion
-
-
-		// private NGDataGrid GetDataGridParent()
-		// {
-		// 	Element p = this;
-		//
-		// 	while (p != null && !(p is NGDataGrid))
-		// 		p = p.Parent;
-		//
-		// 	return (NGDataGrid)p;
-		// }
-		//
-		// private NGDataGridContainer GetContainerParent()
-		// {
-		// 	Element p = this;
-		//
-		// 	while (p != null && !(p is NGDataGridContainer))
-		// 		p = p.Parent;
-		//
-		// 	return (NGDataGridContainer)p;
-		// }
-
-
-		protected override void OnChildMeasureInvalidated()
-		{
-			base.OnChildMeasureInvalidated();
-		}
-
-		protected override void InvalidateLayout()
-		{
-			base.InvalidateLayout();
-		}
-
-		protected override void InvalidateMeasure()
-		{
-			base.InvalidateMeasure();
-		}
-
+		
 	}
 
 

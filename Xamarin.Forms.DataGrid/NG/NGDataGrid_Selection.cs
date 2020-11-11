@@ -6,13 +6,13 @@ using System.Windows.Input;
 
 namespace Xamarin.Forms.DataGrid
 {
-    public partial class NGDataGrid
-    {
+	public partial class NGDataGrid
+	{
 
-	    public static readonly BindableProperty SelectionColorProperty =
-		    BindableProperty.Create(nameof(SelectionColor), typeof(Color), typeof(NGDataGrid), Color.CornflowerBlue);
+		public static readonly BindableProperty SelectionColorProperty =
+			BindableProperty.Create(nameof(SelectionColor), typeof(Color), typeof(NGDataGrid), Color.CornflowerBlue);
 
-	    public static readonly BindableProperty SelectionModeProperty =
+		public static readonly BindableProperty SelectionModeProperty =
 			BindableProperty.Create(nameof(SelectionMode), typeof(SelectionMode), typeof(NGDataGrid),
 				SelectionMode.None, propertyChanged: SelectionModePropertyChanged);
 
@@ -42,7 +42,7 @@ namespace Xamarin.Forms.DataGrid
 
 		public Color SelectionColor
 		{
-			get => (Color)GetValue(SelectionColorProperty);
+			get => (Color) GetValue(SelectionColorProperty);
 			set => SetValue(SelectionColorProperty, value);
 		}
 
@@ -54,13 +54,13 @@ namespace Xamarin.Forms.DataGrid
 
 		public IList<object> SelectedItems
 		{
-			get => (IList<object>)GetValue(SelectedItemsProperty);
+			get => (IList<object>) GetValue(SelectedItemsProperty);
 			set => SetValue(SelectedItemsProperty, new SelectionList(this, value));
 		}
 
 		public ICommand SelectionChangedCommand
 		{
-			get => (ICommand)GetValue(SelectionChangedCommandProperty);
+			get => (ICommand) GetValue(SelectionChangedCommandProperty);
 			set => SetValue(SelectionChangedCommandProperty, value);
 		}
 
@@ -72,13 +72,38 @@ namespace Xamarin.Forms.DataGrid
 
 		public SelectionMode SelectionMode
 		{
-			get => (SelectionMode)GetValue(SelectionModeProperty);
+			get => (SelectionMode) GetValue(SelectionModeProperty);
 			set => SetValue(SelectionModeProperty, value);
 		}
 
 		public event EventHandler<SelectionChangedEventArgs> SelectionChanged;
 
-		//used from UAP
+		void UpdateSelection()
+		{
+
+			switch (SelectionMode)
+			{
+				case SelectionMode.Single:
+					if (SelectedItem != null && !InternalItems.Contains(SelectedItem))
+						SetValueCore(SelectedItemProperty, null);
+					break;
+				case SelectionMode.Multiple:
+					if (SelectedItems.Count > 0)
+					{
+						for (var i = SelectedItems.Count - 1; i >= 0; i--)
+						{
+							if (!InternalItems.Contains(SelectedItems[i]))
+								SelectedItems.RemoveAt(i);	
+						}
+					}
+					break;
+			}
+		}
+	
+	
+
+
+	//used from UAP
 		public void UpdateSelectedItems(IList<object> newSelection)
 		{
 			var oldSelection = new List<object>(SelectedItems);
@@ -100,6 +125,7 @@ namespace Xamarin.Forms.DataGrid
 			SelectedItemsPropertyChanged(oldSelection, newSelection);
 		}
 
+		
 		protected virtual void OnSelectionChanged(SelectionChangedEventArgs args)
 		{
 		}
@@ -224,6 +250,8 @@ namespace Xamarin.Forms.DataGrid
 			var args = new SelectionChangedEventArgs(previousSelection, newSelection);
 			SelectionPropertyChanged(selectableItemsView, args);
 		}
+		
+	
 	}        
  
     

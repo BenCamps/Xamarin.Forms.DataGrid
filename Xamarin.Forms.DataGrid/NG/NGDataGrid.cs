@@ -118,7 +118,7 @@ namespace Xamarin.Forms.DataGrid
 
 		private void Reload()
 		{
-			InternalItems = new List<object>(_internalItems);
+			InvalidateInternalItems();
 		}
 
 
@@ -227,16 +227,19 @@ namespace Xamarin.Forms.DataGrid
 
 		internal IList<object> InternalItems
 		{
-			get { return _internalItems; }
+			get => _internalItems;
+
 			set
 			{
 				_internalItems = value;
 
-				if (IsSortable && SortedColumnIndex != null)
-					SortItems(SortedColumnIndex);
-				else
-					//_listView.ItemsSource = _internalItems;
-					Container.ItemsSource = _internalItems;
+				UpdateSorting();
+
+				UpdateGrouping();
+
+				UpdateSelection();
+
+				Container.ItemsSource = _internalItems;
 			}
 		}
 
@@ -255,13 +258,6 @@ namespace Xamarin.Forms.DataGrid
 
 		#region Handlers
 
-		private void OnBorderThicknessChanged(object sender, EventArgs e)
-		{
-			//todo: add code to redraw borders. Afftects the header cells and the row views.
-		}
-
-		#endregion
-
 		protected override void OnPropertyChanged(string propertyName = null)
 		{
 			base.OnPropertyChanged(propertyName);
@@ -275,5 +271,8 @@ namespace Xamarin.Forms.DataGrid
 			}
 
 		}
+
+		#endregion
+		
 	}
 }

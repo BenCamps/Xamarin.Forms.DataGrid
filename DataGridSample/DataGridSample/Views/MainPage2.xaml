@@ -24,6 +24,9 @@
                        HeaderGridLinesVisible="True"
                        QueryCellStyle="NGDataGrid_OnQueryCellStyle"
                        >
+            <dg:NGDataGrid.GroupDescription>
+                <dg:GroupDescriptor PropertyName="Name"/>
+            </dg:NGDataGrid.GroupDescription>
             <dg:NGDataGrid.Columns>
                 <dg:DataGridColumn Title="Team" PropertyName="Name" Width="120"/>
                 <!--

@@ -166,8 +166,8 @@ namespace Xamarin.Forms.DataGrid
 		private void LayoutRows()
 		{
 
-			// var sw = new Stopwatch();
-			// sw.Start();
+			var sw = new Stopwatch();
+			sw.Start();
 			// Debug.WriteLine($"Container.Scrolled {e.ScrollX},{e.ScrollY} X6");
 
 			if (Items == null || Items.Count == 0)
@@ -360,7 +360,7 @@ namespace Xamarin.Forms.DataGrid
 		#region Rows
 
 		private readonly Queue<NGDataGridViewRow> cachedRows = new Queue<NGDataGridViewRow>();
-		//private readonly ConcurrentQueue<NGDataGridViewRow> cachedRows = new ConcurrentQueue<NGDataGridViewRow>();
+		private readonly Queue<NGDataGridViewGroup> cachedGroups = new Queue<NGDataGridViewGroup>();
 
 		void CreateCachedRow()
 		{
@@ -368,16 +368,25 @@ namespace Xamarin.Forms.DataGrid
 
 			row.Opacity = 0;
 			// row.IsVisible = false;
-			
+
 			cachedRows.Enqueue(row);
-
-			// Device.BeginInvokeOnMainThread(() =>
-			// {
+			
 			InternalChildren.Add(row);
-
 			//layout after adding so it can access the DataGrid?
 			row.Layout(new Rectangle(0, 0, DataGrid.ComputedColumnsWidth, DataGrid.RowHeight));
-			// });
+		}
+
+		void CreateCachedGroup()
+		{
+			var row = new NGDataGridViewGroup(DataGrid);
+
+			row.Opacity = 0;
+			// row.IsVisible = false;
+
+			cachedGroups.Enqueue(row);
+
+			InternalChildren.Add(row);
+			row.Layout(new Rectangle(0, 0, DataGrid.ComputedColumnsWidth, DataGrid.RowHeight));
 		}
 
 		void Create2CachedRows()
@@ -389,30 +398,37 @@ namespace Xamarin.Forms.DataGrid
 
 		void AttacheRow(ItemInfo info)
 		{
-			if (info.View != null)
+			if (info.View != null && info.View.ItemInfo == info)
 				return;
 
-			if (cachedRows.Count == 0)
-				Create2CachedRows();
-
-			var row = cachedRows.Dequeue();
-			//cachedRows.TryDequeue(out var row);
-
-			// if (row.Parent == null)
-			// {
-			//     InternalChildren.Add(row);
-			//     row.Layout(new Rectangle(0, 0, DataGrid.ComputedColumnsWidth, DataGrid.RowHeight));
-			// }
-
-
-			info.View = row;
+			NGDataGridViewItem row = info.View;
+			
+			if (row == null)
+			{
+				if (info is ItemGroup)
+				{
+					if (cachedGroups.Count == 0)
+						CreateCachedGroup();
+					
+					row = cachedGroups.Dequeue();
+				}
+				else
+				{
+					if (cachedRows.Count == 0)
+						Create2CachedRows();
+				
+					row = cachedRows.Dequeue();
+				}
+				
+				info.View = row;
+			}
 
 			row.BatchBegin();
-			// row.TranslationY = info.Y;
 
 			row.ItemInfo = info;
+			// row.TranslationY = info.Y;
 			row.SetPosition(0, info.Y);
-			
+
 			// row.IsVisible = true;
 			row.Opacity = 1;
 			row.BatchCommit();
@@ -435,7 +451,11 @@ namespace Xamarin.Forms.DataGrid
 			// row.BatchCommit();
 
 			info.View = null;
-			cachedRows.Enqueue(row);
+			
+			if (info is ItemGroup)
+				cachedGroups.Enqueue((NGDataGridViewGroup)row);
+			else
+				cachedRows.Enqueue((NGDataGridViewRow)row);
 		}
 
 
@@ -448,8 +468,31 @@ namespace Xamarin.Forms.DataGrid
 
 			foreach (var item in items)
 			{
-				var info = new ItemInfo();
+				if (item is ObjectGroup group)
+				{
+					var groupInfo = new ItemGroup();
 
+					groupInfo.Items = new List<ItemInfo>();
+					groupInfo.Key = group.Key;
+					groupInfo.Text = group.Text;
+					groupInfo.Expanded = true;
+					BuildItemInfo(group, groupInfo);
+
+					foreach (var groupItem in group.Items)
+					{
+						groupInfo.Items.Add(BuildItemInfo(groupItem, new ItemInfo()));
+					}
+
+				}
+				else
+				{
+					BuildItemInfo(item, new ItemInfo());
+				}
+			}
+
+
+			ItemInfo BuildItemInfo(object item, ItemInfo info)
+			{
 				info.Item = item;
 				info.Height = h;
 				info.Y = y;
@@ -459,8 +502,11 @@ namespace Xamarin.Forms.DataGrid
 
 				y += h;
 				i++;
-			}
 
+				return info;
+			}
+			
+			
 			Items = result;
 		}
 
@@ -606,7 +652,7 @@ namespace Xamarin.Forms.DataGrid
 				return;
 
 			itemInfo.Selected = selected;
-			itemInfo.View?.UpdateSelection();
+			itemInfo.View?.InvalidateColors();
 		}
 
 
@@ -628,6 +674,50 @@ namespace Xamarin.Forms.DataGrid
 
 		#endregion
 
+		
+		#region Grouping
+
+		internal void ToggleGroup(ItemGroup group)
+		{
+			var nextIndex = Items.IndexOf(group) + 1;
+
+			if (group.Expanded)
+			{
+				group.Expanded = false;
+				
+				//hide the items
+				foreach (var info in group.Items)
+				{
+					DetachRow(info);
+				}
+				
+				Items.RemoveRange(nextIndex, group.Items.Count);
+			}
+			else
+			{
+				group.Expanded = true;
+				
+				Items.InsertRange(nextIndex, group.Items);
+			}
+
+			var y = group.End;
+			for (int i = nextIndex; i < Items.Count; i++)
+			{
+				var info = Items[i];
+
+				info.Index = i;
+				info.Y = y;
+				y += info.Height;
+				
+				DetachRow(info);
+			}
+			
+			ResetLastView();
+			LayoutRows();
+		}
+		
+
+		#endregion
 
 
 	}
@@ -635,18 +725,27 @@ namespace Xamarin.Forms.DataGrid
 
 	internal class ItemInfo
 	{
-		internal double Y;
-		internal double Height;
+		public double Y;
+		public double Height;
 
-		internal bool Selected;
+		public bool Selected;
 
-		internal object Item;
-		internal int Index;
-		internal NGDataGridViewRow View;
+		public object Item;
+		public int Index;
+		public NGDataGridViewItem View;
 
-		internal double Start => Y;
-		internal double End => Y + Height; //todo: cache value
+		public double Start => Y;
+		public double End => Y + Height; //todo: cache value
 	}
 
+	internal class ItemGroup : ItemInfo
+	{
+		public object Key;
+		public string Text;
+		public List<ItemInfo> Items;
+
+		public bool Expanded;
+
+	}
 
 }

@@ -14,6 +14,11 @@ namespace DataGridSample
 		public MainPage2()
 		{
 			InitializeComponent();
+			
+			
+			
+			
+			
 		}
 
 		private void NGDataGrid_OnQueryCellStyle(object sender, DataGridQueryCellStyleEventArgs e)

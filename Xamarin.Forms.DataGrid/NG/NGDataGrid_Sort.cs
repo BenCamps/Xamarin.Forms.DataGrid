@@ -27,7 +27,7 @@ namespace Xamarin.Forms.DataGrid
 				{
 					var self = b as NGDataGrid;
 					if (o != n)
-						self.SortItems((SortData)n);
+						self.InvalidateInternalItems();
 				});
 
 
@@ -123,9 +123,13 @@ namespace Xamarin.Forms.DataGrid
 	    
 	    
 		#region Sorting methods
-		internal void SortItems(SortData sData)
+		
+		//this should be called from InternalItems setter only
+		private void UpdateSorting()
 		{
-			if (InternalItems == null || sData.Index >= Columns.Count || !Columns[sData.Index].SortingEnabled)
+			var sData = SortedColumnIndex;
+			
+			if (InternalItems == null || !IsSortable || sData == null || sData.Index >= Columns.Count || !Columns[sData.Index].SortingEnabled)
 				return;
 
 			var items = InternalItems;
@@ -173,9 +177,8 @@ namespace Xamarin.Forms.DataGrid
 			_sortingOrders[sData.Index] = order;
 			SortedColumnIndex = sData;
 
-			//_internalItems = items;
-			//_listView.ItemsSource = _internalItems;
-			Container.ItemsSource = items;
+			//update the backing field and not the property
+			_internalItems = items;
 		}
 		#endregion
         

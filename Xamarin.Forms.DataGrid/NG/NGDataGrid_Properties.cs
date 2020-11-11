@@ -17,8 +17,7 @@ namespace Xamarin.Forms.DataGrid
 				propertyChanged: (b, o, n) =>
 				{
 					var self = b as NGDataGrid;
-					if (self.Columns != null && self.ItemsSource != null)
-						self.Reload();
+					self.InvalidateInternalItems();
 				});
 
 		public static readonly BindableProperty RowsTextColorPaletteProperty =
@@ -26,8 +25,7 @@ namespace Xamarin.Forms.DataGrid
 				propertyChanged: (b, o, n) =>
 				{
 					var self = b as NGDataGrid;
-					if (self.Columns != null && self.ItemsSource != null)
-						self.Reload();
+					self.InvalidateInternalItems();
 				});
 
 		public static readonly BindableProperty ColumnsProperty =
@@ -53,10 +51,6 @@ namespace Xamarin.Forms.DataGrid
 
 			);
 
-		public static readonly BindableProperty ItemsSourceProperty =
-			BindableProperty.Create(nameof(ItemsSource), typeof(IEnumerable), typeof(NGDataGrid), null,
-				propertyChanged: HandleItemsSourcePropertyChanged);
-		
 		public static readonly BindableProperty RowHeightProperty =
 			BindableProperty.Create(nameof(RowHeight), typeof(int), typeof(NGDataGrid), 40,
 				propertyChanged: (b, o, n) =>
@@ -106,12 +100,6 @@ namespace Xamarin.Forms.DataGrid
 		{
 			get => (IColorProvider)GetValue(RowsTextColorPaletteProperty);
 			set => SetValue(RowsTextColorPaletteProperty, value);
-		}
-
-		public IEnumerable ItemsSource
-		{
-			get => (IEnumerable)GetValue(ItemsSourceProperty);
-			set => SetValue(ItemsSourceProperty, value);
 		}
 
 		public ObservableCollection<DataGridColumn> Columns

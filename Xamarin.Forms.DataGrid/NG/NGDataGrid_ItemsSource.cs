@@ -2,12 +2,24 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Xamarin.Forms.DataGrid
 {
 	public partial class NGDataGrid
 	{
+		public static readonly BindableProperty ItemsSourceProperty =
+			BindableProperty.Create(nameof(ItemsSource), typeof(IEnumerable), typeof(NGDataGrid), null,
+				propertyChanged: HandleItemsSourcePropertyChanged);
 
+
+		public IEnumerable ItemsSource
+		{
+			get => (IEnumerable)GetValue(ItemsSourceProperty);
+			set => SetValue(ItemsSourceProperty, value);
+		}
+
+		
 		private static void HandleItemsSourcePropertyChanged(object b, object o, object n)
 		{
 			var self = (NGDataGrid)b;
@@ -22,12 +34,7 @@ namespace Xamarin.Forms.DataGrid
 					newCollection.CollectionChanged += self.HandleItemsSourceCollectionChanged;
 
 				self.InvalidateInternalItems();
-				//self.UpdateInternalItems((IEnumerable)n);
 			}
-
-			//todo: handle resetting selection
-			//if (self.SelectedItem != null && !self.InternalItems.Contains(self.SelectedItem))
-			//	self.SelectedItem = null;
 
 			//todo:handle showing NoDataView
 			//if (self.NoDataView != null)
@@ -43,38 +50,38 @@ namespace Xamarin.Forms.DataGrid
 		private void HandleItemsSourceCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
 		{
 			InvalidateInternalItems();
-			UpdateInternalItems((IEnumerable)e);
-
-			//todo: handle updating selectedItem
-			//if (SelectedItem != null && !InternalItems.Contains(SelectedItem))
-			//	SelectedItem = null;
 		}
 
 
 		private bool internalItemsSet = false;
+		private bool updateInternalItemsScheduled = false;
 		private void InvalidateInternalItems()
 		{
-			internalItemsSet = false;
+			if (!updateInternalItemsScheduled)
+			{
+				internalItemsSet = false;
+				updateInternalItemsScheduled = true;
+				
+				Device.BeginInvokeOnMainThread(async () =>
+				{
+					await Task.Delay(200); //no more than 5 times per second
+					UpdateInternalItems();
+				});
+			}
 		}
 
-		private void UpdateInternalItems(IEnumerable e = null)
+		private void UpdateInternalItems()
 		{
 			//do not set internal items unless columns have been set
 			if (ComputedColumnsWidth < 0 || internalItemsSet)
 				return;
 
-			if (e == null)
-				e = ItemsSource;
-
-			if (e == null)
+			if (ItemsSource == null)
 				return;
 
+			InternalItems = ItemsSource.Cast<object>().ToList();
 			internalItemsSet = true;
-
-			// Device.BeginInvokeOnMainThread(() =>
-			// {
-			InternalItems = new List<object>(e.Cast<object>());
-			// });
+			updateInternalItemsScheduled = false;
 		}
 
 	}
