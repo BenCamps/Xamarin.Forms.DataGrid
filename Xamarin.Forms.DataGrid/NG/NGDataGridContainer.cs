@@ -168,7 +168,8 @@ namespace Xamarin.Forms.DataGrid
 
 			var sw = new Stopwatch();
 			sw.Start();
-			// Debug.WriteLine($"Container.Scrolled {e.ScrollX},{e.ScrollY} X6");
+
+			Debug.WriteLine($"Container.Scrolled {Scroller.ScrollX},{Scroller.ScrollY} X6");
 
 			if (Items == null || Items.Count == 0)
 				return; //nothing to show
@@ -370,7 +371,7 @@ namespace Xamarin.Forms.DataGrid
 			// row.IsVisible = false;
 
 			cachedRows.Enqueue(row);
-			
+
 			InternalChildren.Add(row);
 			//layout after adding so it can access the DataGrid?
 			row.Layout(new Rectangle(0, 0, DataGrid.ComputedColumnsWidth, DataGrid.RowHeight));
@@ -402,24 +403,24 @@ namespace Xamarin.Forms.DataGrid
 				return;
 
 			NGDataGridViewItem row = info.View;
-			
+
 			if (row == null)
 			{
 				if (info is ItemGroup)
 				{
 					if (cachedGroups.Count == 0)
 						CreateCachedGroup();
-					
+
 					row = cachedGroups.Dequeue();
 				}
 				else
 				{
 					if (cachedRows.Count == 0)
 						Create2CachedRows();
-				
+
 					row = cachedRows.Dequeue();
 				}
-				
+
 				info.View = row;
 			}
 
@@ -451,7 +452,7 @@ namespace Xamarin.Forms.DataGrid
 			// row.BatchCommit();
 
 			info.View = null;
-			
+
 			if (info is ItemGroup)
 				cachedGroups.Enqueue((NGDataGridViewGroup)row);
 			else
@@ -505,8 +506,8 @@ namespace Xamarin.Forms.DataGrid
 
 				return info;
 			}
-			
-			
+
+
 			Items = result;
 		}
 
@@ -635,8 +636,23 @@ namespace Xamarin.Forms.DataGrid
 			if (Items == null)
 				return;
 
-			foreach (var info in Items)
-			{
+			// ClearItemsSelection(Items);
+			//
+			// void ClearItemsSelection(IList<ItemInfo> items)
+			// {
+			// 	foreach (var info in Items)
+			// 	{
+			// 		if (info is ItemGroup group && !group.Expanded)
+			// 		{
+			// 			ClearItemsSelection(group.Items);
+			// 		}
+			// 		else
+			// 			UpdateItemInfoSelection(info, false);
+			// 	}
+			// }
+
+			foreach (var info in _selectedItemsCache.ToArray())
+			{ 
 				UpdateItemInfoSelection(info, false);
 			}
 		}
@@ -653,8 +669,20 @@ namespace Xamarin.Forms.DataGrid
 
 			itemInfo.Selected = selected;
 			itemInfo.View?.InvalidateColors();
-		}
 
+			if (selected)
+			{
+				if(!_selectedItemsCache.Contains(itemInfo))
+					_selectedItemsCache.Add(itemInfo);
+			}
+			else
+			{
+				if(_selectedItemsCache.Contains(itemInfo))
+					_selectedItemsCache.Remove(itemInfo);
+			}
+		}
+		
+		HashSet<ItemInfo> _selectedItemsCache = new HashSet<ItemInfo>();
 
 		#endregion
 
