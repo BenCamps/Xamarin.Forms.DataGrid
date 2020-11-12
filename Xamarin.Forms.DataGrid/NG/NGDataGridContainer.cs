@@ -674,48 +674,61 @@ namespace Xamarin.Forms.DataGrid
 
 		#endregion
 
-		
+
 		#region Grouping
 
 		internal void ToggleGroup(ItemGroup group)
 		{
+			FreezeRows();
+
 			var nextIndex = Items.IndexOf(group) + 1;
 
 			if (group.Expanded)
 			{
 				group.Expanded = false;
-				
+
 				//hide the items
 				foreach (var info in group.Items)
 				{
 					DetachRow(info);
 				}
-				
+
 				Items.RemoveRange(nextIndex, group.Items.Count);
 			}
 			else
 			{
 				group.Expanded = true;
-				
+
 				Items.InsertRange(nextIndex, group.Items);
 			}
 
 			var y = group.End;
-			for (int i = nextIndex; i < Items.Count; i++)
+			for (var i = nextIndex; i < Items.Count; i++)
 			{
 				var info = Items[i];
 
 				info.Index = i;
 				info.Y = y;
 				y += info.Height;
-				
-				DetachRow(info);
+
+				if (info.View != null)
+				{
+					if (info.Y >= _lastViewEnd)
+						DetachRow(info);
+					else
+						info.View.SetPosition(info.View.X, info.Y);
+				}
 			}
-			
+
+
 			ResetLastView();
 			LayoutRows();
+
+			InvalidateMeasure();
+
+			UnfreezeRows();
 		}
-		
+
 
 		#endregion
 

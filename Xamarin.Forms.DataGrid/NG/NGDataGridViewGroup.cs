@@ -2,6 +2,7 @@
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using Xamarin.Forms.Internals;
 using Xamarin.Forms.Shapes;
@@ -72,7 +73,7 @@ namespace Xamarin.Forms.DataGrid
 				HorizontalTextAlignment = TextAlignment.Start,
 				VerticalTextAlignment = TextAlignment.Center,
 				LineBreakMode = LineBreakMode.NoWrap,
-				Padding = 2
+				Padding = new Thickness(20, 2, 2, 2)
 			};
 			text.SetBinding(Label.TextProperty, new Binding(nameof(ObjectGroup.Text), BindingMode.OneWay));
 			text.SetBinding(Label.FontSizeProperty, new Binding(NGDataGrid.FontSizeProperty.PropertyName, BindingMode.Default, source: DataGrid));
@@ -98,6 +99,20 @@ namespace Xamarin.Forms.DataGrid
 		private NGDataGridViewCell CreateCellView()
 		{
 			var cell = new NGDataGridViewCell();
+
+			var iconSource = new FontImageSource {FontFamily = "XDGIcons", Glyph = "\uea6b", Size = 16};
+
+			var icon = new Image
+			{
+				Aspect = Aspect.AspectFit,
+				HorizontalOptions = LayoutOptions.Start,
+				VerticalOptions =  LayoutOptions.Center,
+				Source = iconSource,
+				WidthRequest = 16,
+				Margin = new Thickness(2, 0,0,0)
+			};
+			
+			cell.Children.Add(icon);
 			
 			return cell;
 		}
@@ -135,7 +150,18 @@ namespace Xamarin.Forms.DataGrid
 							var label = (Label)cell.Content;
 							label.TextColor = fg;
 						}
+
+						var knob = (Image) cell.Children.FirstOrDefault(x => x is Image);
+						
+						if (knob == null)
+							continue;
+						
+						if (IsExpanded)
+							knob.Rotation = 0;
+						else
+							knob.Rotation = -90;
 					}
+					
 				}
 
 				// updateNeeded = false;
@@ -149,6 +175,13 @@ namespace Xamarin.Forms.DataGrid
 		protected override void OnTapped()
 		{
 			DataGrid.Container.ToggleGroup(GroupInfo);
+
+			var knob = (Image)Children.First(x => x is NGDataGridViewCell).LogicalChildren.FirstOrDefault((x) => x is Image);
+			
+			if (IsExpanded)
+				knob.RotateTo(0, easing: Easing.SinInOut);
+			else
+				knob.RotateTo(-90, easing: Easing.SinInOut);
 		}
 
 		#endregion
