@@ -26,4 +26,6 @@ using Xamarin.Forms;
 //[assembly: AssemblyDelaySign(false)]
 //[assembly: AssemblyKeyFile("")]
 
-[assembly: ExportFont("MaterialIconsOutlined-Regular.otf", Alias = "XDGIcons")]
+//[assembly: ExportFont("MaterialIconsOutlined-Regular.otf", Alias = "XDGIcons")]
+// [assembly: ExportFont("MaterialIcons-Regular.ttf", Alias = "XDGIcons")]
+[assembly: ExportFont("ArrowFont.ttf", Alias = "XDGIcons")]

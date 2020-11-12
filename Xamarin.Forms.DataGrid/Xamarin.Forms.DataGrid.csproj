@@ -21,10 +21,12 @@
 	<ItemGroup>
 		<None Remove="down.png" />
 		<None Remove="up.png" />
+		<None Remove="Resources\Fonts\ArrowFont.ttf" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<EmbeddedResource Include="down.png" />
+		<EmbeddedResource Include="Resources\Fonts\ArrowFont.ttf" />
 		<EmbeddedResource Include="up.png" />
 		<None Remove="Resources\Fonts\MaterialIconsOutlined-Regular.otf" />
 		<EmbeddedResource Include="Resources\Fonts\MaterialIconsOutlined-Regular.otf" />

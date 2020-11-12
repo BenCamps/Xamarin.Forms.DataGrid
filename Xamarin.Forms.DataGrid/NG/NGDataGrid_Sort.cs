@@ -32,10 +32,10 @@ namespace Xamarin.Forms.DataGrid
 
 
 		public static readonly BindableProperty AscendingIconProperty =
-			BindableProperty.Create(nameof(AscendingIcon), typeof(ImageSource), typeof(NGDataGrid), new FontImageSource{Glyph = "\ue5d8", FontFamily = "XDGIcons", Size = 16});
+			BindableProperty.Create(nameof(AscendingIcon), typeof(ImageSource), typeof(NGDataGrid), new FontImageSource{Glyph = "\uea95", FontFamily = "XDGIcons", Size = 16});
 
 		public static readonly BindableProperty DescendingIconProperty =
-			BindableProperty.Create(nameof(DescendingIcon), typeof(ImageSource), typeof(NGDataGrid), new FontImageSource{Glyph = "\ue5db", FontFamily = "XDGIcons", Size = 16});
+			BindableProperty.Create(nameof(DescendingIcon), typeof(ImageSource), typeof(NGDataGrid), new FontImageSource{Glyph = "\uea92", FontFamily = "XDGIcons", Size = 16});
 
 		public static readonly BindableProperty DescendingIconStyleProperty =
 			BindableProperty.Create(nameof(DescendingIconStyle), typeof(Style), typeof(NGDataGrid), null,
