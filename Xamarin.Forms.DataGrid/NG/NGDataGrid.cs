@@ -8,8 +8,8 @@ using Xamarin.Forms.Shapes;
 namespace Xamarin.Forms.DataGrid
 {
 	//done: implement selection
-	//todo: implement grouping
-	//todo: implement group display expand/collapse
+	//done: implement grouping
+	//done: implement group display expand/collapse
 	//done: implement query cell colors
 	//done: implement header cells sort and sort arrow
 	//todo: implement skiasharp label (with border support?)
@@ -52,7 +52,7 @@ namespace Xamarin.Forms.DataGrid
 
 			//if we go headless, TranslateX,Y don't have any effect
 			//CompressedLayout.SetIsHeadless(headerView, true);
-			
+
 			HeaderView = headerView;
 			RefreshView = new RefreshView();
 			Scroller = new NGDataGridScroller();
@@ -264,8 +264,8 @@ namespace Xamarin.Forms.DataGrid
 
 
 			if (propertyName == nameof(HeaderGridLinesVisible)
-			    || propertyName == nameof(GridLinesVisibility)
-			    || propertyName == nameof(GridLineWidth))
+				|| propertyName == nameof(GridLinesVisibility)
+				|| propertyName == nameof(GridLineWidth))
 			{
 				UpdateHeaderGridLines();
 			}
@@ -273,6 +273,6 @@ namespace Xamarin.Forms.DataGrid
 		}
 
 		#endregion
-		
+
 	}
 }
