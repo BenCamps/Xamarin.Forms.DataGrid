@@ -34,11 +34,14 @@ namespace Xamarin.Forms.DataGrid
 
 		#endregion
 
+		private static bool alt;
 
 		protected NGDataGridViewItem(NGDataGrid dg)
 		{
 			//empty
-			BackgroundColor = Color.PaleGreen;
+			BackgroundColor = alt ? Color.PaleGreen : Color.Orchid;
+			alt = !alt;
+			
 			DataGrid = dg;
 
 			//handle row selection
