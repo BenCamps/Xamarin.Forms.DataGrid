@@ -464,7 +464,9 @@ namespace Xamarin.Forms.DataGrid
 
 					if ((width == 0 ? wordWidth : width + wordWithSpaceWidth) > maxWidth)
 					{
-						result.Add(new Line() { Text = lineResult.ToString(), WidthPixels = width });
+						if (width > 0)
+							result.Add(new Line() { Text = lineResult.ToString(), WidthPixels = width });
+	
 						lineResult.Clear();
 						width = 0;
 					}
