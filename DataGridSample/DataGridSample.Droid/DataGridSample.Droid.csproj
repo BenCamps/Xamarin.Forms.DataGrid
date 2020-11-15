@@ -196,6 +196,15 @@
       <HintPath>..\..\packages\Xamarin.Forms.4.8.0.1687\lib\MonoAndroid90\Xamarin.Forms.Xaml.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="SkiaSharp">
+      <HintPath>..\..\packages\SkiaSharp.2.80.2\lib\monoandroid1.0\SkiaSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="SkiaSharp.Views.Android">
+      <HintPath>..\..\packages\SkiaSharp.Views.2.80.2\lib\monoandroid1.0\SkiaSharp.Views.Android.dll</HintPath>
+    </Reference>
+    <Reference Include="SkiaSharp.Views.Forms">
+      <HintPath>..\..\packages\SkiaSharp.Views.Forms.2.80.2\lib\monoandroid1.0\SkiaSharp.Views.Forms.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="MainActivity.cs" />
@@ -315,4 +324,5 @@
     <Error Condition="!Exists('..\..\packages\Xamarin.Forms.4.8.0.1687\build\Xamarin.Forms.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Xamarin.Forms.4.8.0.1687\build\Xamarin.Forms.targets'))" />
   </Target>
   <Import Project="..\..\packages\Xamarin.Forms.4.8.0.1687\build\Xamarin.Forms.targets" Condition="Exists('..\..\packages\Xamarin.Forms.4.8.0.1687\build\Xamarin.Forms.targets')" />
+  <Import Project="..\..\packages\SkiaSharp.2.80.2\build\monoandroid1.0\SkiaSharp.targets" Condition="Exists('..\..\packages\SkiaSharp.2.80.2\build\monoandroid1.0\SkiaSharp.targets')" />
 </Project>
