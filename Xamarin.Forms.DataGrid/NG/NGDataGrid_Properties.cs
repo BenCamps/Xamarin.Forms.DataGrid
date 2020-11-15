@@ -61,10 +61,11 @@ namespace Xamarin.Forms.DataGrid
 				});
 		
 		public static readonly BindableProperty FontSizeProperty =
-			BindableProperty.Create(nameof(FontSize), typeof(double), typeof(NGDataGrid), 13.0);
+			BindableProperty.Create(nameof(FontSize), typeof(double), typeof(NGDataGrid), -1.0,
+				defaultValueCreator: FontSizeDefaultValueCreator);
 
 		public static readonly BindableProperty FontFamilyProperty =
-			BindableProperty.Create(nameof(FontFamily), typeof(string), typeof(NGDataGrid), Font.Default.FontFamily);
+			BindableProperty.Create(nameof(FontFamily), typeof(string), typeof(NGDataGrid), default(string));
 		
 		public static readonly BindableProperty RefreshCommandProperty =
 			BindableProperty.Create(nameof(RefreshCommand), typeof(ICommand), typeof(NGDataGrid), null,
@@ -85,6 +86,12 @@ namespace Xamarin.Forms.DataGrid
 					if (o != n)
 						(b as NGDataGrid)._noDataView.Content = n as View;
 				});
+		
+		static object FontSizeDefaultValueCreator(BindableObject bindable)
+		{
+			return Device.GetNamedSize(NamedSize.Default, typeof(Label));
+		}
+
 		#endregion
 
 		#region Properties

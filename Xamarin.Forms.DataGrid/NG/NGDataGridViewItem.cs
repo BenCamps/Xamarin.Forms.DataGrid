@@ -34,7 +34,7 @@ namespace Xamarin.Forms.DataGrid
 
 		#endregion
 
-		private static bool alt;
+		protected static bool alt;
 
 		protected NGDataGridViewItem(NGDataGrid dg)
 		{

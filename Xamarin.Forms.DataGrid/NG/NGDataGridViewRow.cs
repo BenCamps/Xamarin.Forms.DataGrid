@@ -136,21 +136,43 @@ namespace Xamarin.Forms.DataGrid
 				}
 				else
 				{
-					var text = new Label
+					// var text = new Label
+					if (true)
 					{
-						HorizontalTextAlignment = col.HorizontalContentAlignment.ToTextAlignment(),
-						VerticalTextAlignment = col.VerticalContentAlignment.ToTextAlignment(),
-						LineBreakMode = LineBreakMode.WordWrap,
-						Padding = 2
-					};
-					text.SetBinding(Label.TextProperty, new Binding(col.PropertyName, BindingMode.Default, stringFormat: col.StringFormat, converter: col.PropertyConverter, converterParameter: col.PropertyConverterParameter));
-					text.SetBinding(Label.FontSizeProperty, new Binding(NGDataGrid.FontSizeProperty.PropertyName, BindingMode.Default, source: DataGrid));
-					text.SetBinding(Label.FontFamilyProperty, new Binding(NGDataGrid.FontFamilyProperty.PropertyName, BindingMode.Default, source: DataGrid));
+						var text = new SKLabel
+						{
+							HorizontalTextAlignment = col.HorizontalContentAlignment.ToTextAlignment(),
+							VerticalTextAlignment = col.VerticalContentAlignment.ToTextAlignment(),
+							LineBreakMode = LineBreakMode.WordWrap,
+							Padding = 2
+						};
+						text.SetBinding(SKLabel.TextProperty, new Binding(col.PropertyName, BindingMode.Default, stringFormat: col.StringFormat, converter: col.PropertyConverter, converterParameter: col.PropertyConverterParameter));
+						text.SetBinding(SKLabel.FontSizeProperty, new Binding(NGDataGrid.FontSizeProperty.PropertyName, BindingMode.Default, source: DataGrid));
+						text.SetBinding(SKLabel.FontFamilyProperty, new Binding(NGDataGrid.FontFamilyProperty.PropertyName, BindingMode.Default, source: DataGrid));
 
-					//bind text color
-					text.SetBinding(Label.TextColorProperty, new Binding(nameof(ItemForegroundColor), BindingMode.OneWay, source: this));
+						//bind text color
+						text.SetBinding(SKLabel.TextColorProperty, new Binding(nameof(ItemForegroundColor), BindingMode.OneWay, source: this));
 
-					content = text;
+						content = text;
+					}
+					else
+					{
+						var text = new Label
+						{
+							HorizontalTextAlignment = col.HorizontalContentAlignment.ToTextAlignment(),
+							VerticalTextAlignment = col.VerticalContentAlignment.ToTextAlignment(),
+							LineBreakMode = LineBreakMode.WordWrap,
+							Padding = 2
+						};
+						text.SetBinding(Label.TextProperty, new Binding(col.PropertyName, BindingMode.Default, stringFormat: col.StringFormat, converter: col.PropertyConverter, converterParameter: col.PropertyConverterParameter));
+						text.SetBinding(Label.FontSizeProperty, new Binding(NGDataGrid.FontSizeProperty.PropertyName, BindingMode.Default, source: DataGrid));
+						text.SetBinding(Label.FontFamilyProperty, new Binding(NGDataGrid.FontFamilyProperty.PropertyName, BindingMode.Default, source: DataGrid));
+
+						//bind text color
+						text.SetBinding(Label.TextColorProperty, new Binding(nameof(ItemForegroundColor), BindingMode.OneWay, source: this));
+
+						content = text;
+					}
 				}
 
 				//bind content background as row background color
@@ -232,8 +254,10 @@ namespace Xamarin.Forms.DataGrid
 
 						if (!cell.IsFromTemplate)
 						{
-							var label = (Label)cell.Content;
-							label.TextColor = fg;
+							if (cell.Content is SKLabel label)
+								label.TextColor = fg;
+							else if (cell.Content is Label label2)
+								label2.TextColor = fg;
 						}
 					}
 				}
