@@ -111,8 +111,9 @@ namespace Xamarin.Forms.DataGrid
 		private bool doneFirstLayout;
 		protected override void LayoutChildren(double x, double y, double width, double height)
 		{
-			//if (!doneFirstLayout && height > 0 && (Items?.Count ?? 0) > 0)
+			if (!doneFirstLayout && height > 0 && (Items?.Count ?? 0) > 0)
 			{
+				WarmUpCache();
 				if (Device.RuntimePlatform == Device.macOS)
 				{
 					Device.BeginInvokeOnMainThread(async () =>
@@ -149,6 +150,7 @@ namespace Xamarin.Forms.DataGrid
 
 		private double _lastViewStart = 0;
 		private double _lastViewEnd = 0;
+		private Queue<ItemInfo> _recycleQueue = new Queue<ItemInfo>();
 
 		void ResetLastView()
 		{
@@ -156,6 +158,17 @@ namespace Xamarin.Forms.DataGrid
 			_lastViewEnd = 0;
 		}
 
+
+		void ClearRecycleQueue()
+		{
+			//detach marked rows from previous run
+			while (_recycleQueue.Count > 0)
+			{
+				DetachRow(_recycleQueue.Dequeue());
+			}			
+		}
+		
+		
 		private void OnScrolled(object sender, ScrolledEventArgs e)
 		{
 			//Device.BeginInvokeOnMainThread(LayoutRows);
@@ -195,7 +208,10 @@ namespace Xamarin.Forms.DataGrid
 			var clearEnd = 0d;
 			var showStart = 0d;
 			var showEnd = 0d;
-			var padSize = windowHeight / 4;
+			var padSize = rowHeight; //windowHeight / 6;
+
+			if (Device.RuntimePlatform == Device.Android)
+				padSize = rowHeight * 3;
 
 			//extend show area by a portion of the view height in the the direction we're moving in
 			if (isForward)
@@ -219,55 +235,11 @@ namespace Xamarin.Forms.DataGrid
 				showStart -= padSize;
 			}
 
-			if (Math.Abs(clearStart - clearEnd) > 0.0001)
-			{
-				if (Device.RuntimePlatform != Device.macOS)
-				{
-					Device.BeginInvokeOnMainThread(async () =>
-					{
-						//delay 2 frames
-						await Task.Delay(16 * 2);
-						ClearItems();
-					});
-				}
-				else
-					//				Device.BeginInvokeOnMainThread(() => Device.BeginInvokeOnMainThread(() => Device.BeginInvokeOnMainThread(ClearItems)));
-					ClearItems();
+			if (Device.RuntimePlatform != Device.Android)
+				Device.BeginInvokeOnMainThread(ClearRecycleQueue);
+			else
+				ClearRecycleQueue();
 
-				//LOCAL FUNCTION
-				void ClearItems()
-				{
-					for (var i = GetItemIndexAt(clearStart); i < itemsCount; i++)
-					{
-						var info = Items[i];
-						var newScrollY = Scroller.ScrollY;
-
-						if (isForward)
-						{
-							if (info.End <= clearEnd)
-							{
-								//protect against quick successive scrolls up and down 
-								if (info.End < newScrollY || info.Start >= newScrollY + windowHeight)
-									DetachRow(info);
-							}
-							else
-								break;
-						}
-						else
-						{
-							if (info.Start >= clearEnd)
-								break;
-
-							if (info.Start >= clearStart)
-							{
-								//protect against quick successive scrolls up and down 
-								if (info.End < newScrollY || info.Start >= newScrollY + windowHeight)
-									DetachRow(info);
-							}
-						}
-					}
-				}
-			}
 
 			if (Math.Abs(showStart - showEnd) > 0.0001)
 			{
@@ -289,15 +261,68 @@ namespace Xamarin.Forms.DataGrid
 				// if (doneAttach)
 				// 	Debug.WriteLine($"Scroll Attach: Rows {Children.Count - cachedRows.Count} Cache {cachedRows.Count} Ellapsed {sw.ElapsedMilliseconds}ms Clear {clearStart}-{clearEnd} Show {showStart}-{showEnd} Distance {windowStart - viewStart}");
 			}
+			
+			
+			if (Math.Abs(clearStart - clearEnd) > 0.0001)
+			{
+				// if (Device.RuntimePlatform != Device.macOS)
+				// {
+				// 	Device.BeginInvokeOnMainThread(async () =>
+				// 	{
+				// 		//delay 2 frames
+				// 		await Task.Delay(16 * 2);
+				// 		ClearItems();
+				// 	});
+				// }
+				// else
+				{
+					//				Device.BeginInvokeOnMainThread(() => Device.BeginInvokeOnMainThread(() => Device.BeginInvokeOnMainThread(ClearItems)));
+					ClearItems();
+					
+					// this.Animate("ClearItems", (v) => { }, 0, 1, 16U, 32U, Easing.Linear, (d, b) => ClearItems());
+					//this.Animate("ClearItems", (v) => { }, 0, 1, 16U, 0U, Easing.Linear, (d, b) => ClearItems());
+				}
 
+				//LOCAL FUNCTION
+				void ClearItems()
+				{
+					var newScrollY = Scroller.ScrollY;
+	
+					if (isForward)
+					{
+						for (var i = GetItemIndexAt(clearStart); i < itemsCount; i++)
+						{
+							var info = Items[i];
+
+							if (info.End <= clearEnd)
+								_recycleQueue.Enqueue(info);
+							else
+								break;
+						}
+					}
+					else
+					{
+						for (var i = GetItemIndexAt(clearEnd); i >= 0; i--)
+						{
+							var info = Items[i];
+
+							if (info.Start >= clearStart)
+								_recycleQueue.Enqueue(info);
+							else
+								break;
+						}
+					}
+				}
+			}
 
 			//set the last view
 			_lastViewStart = windowStart;
 			_lastViewEnd = windowEnd;
 
-			// Debug.WriteLine($"Scroll END Visible Rows {Children.Count - cachedRows.Count} Cache {cachedRows.Count} Ellapsed {sw.ElapsedMilliseconds}ms");
+			Debug.WriteLine($"Scroll END Visible Rows {Children.Count - cachedRows.Count} Cache {cachedRows.Count} Ellapsed {sw.ElapsedMilliseconds}ms");
 		}
 
+		
 
 		internal int GetItemIndexAt(double position, int startIndex = 0, bool directionForward = true)
 		{
@@ -367,8 +392,8 @@ namespace Xamarin.Forms.DataGrid
 		{
 			var row = new NGDataGridViewRow(DataGrid);
 
-			row.Opacity = 0;
-			// row.IsVisible = false;
+			// row.Opacity = 0;
+			row.IsVisible = false;
 
 			cachedRows.Enqueue(row);
 
@@ -381,8 +406,8 @@ namespace Xamarin.Forms.DataGrid
 		{
 			var row = new NGDataGridViewGroup(DataGrid);
 
-			row.Opacity = 0;
-			// row.IsVisible = false;
+			// row.Opacity = 0;
+			row.IsVisible = false;
 
 			cachedGroups.Enqueue(row);
 
@@ -430,8 +455,8 @@ namespace Xamarin.Forms.DataGrid
 			// row.TranslationY = info.Y;
 			row.SetPosition(0, info.Y);
 
-			// row.IsVisible = true;
-			row.Opacity = 1;
+			row.IsVisible = true;
+			// row.Opacity = 1;
 			row.BatchCommit();
 		}
 
@@ -444,8 +469,8 @@ namespace Xamarin.Forms.DataGrid
 			var row = info.View;
 
 			// row.BatchBegin();
-			row.Opacity = 0;
-			// row.IsVisible = false;
+			//row.Opacity = 0;
+			row.IsVisible = false;
 
 			if (unbind)
 				row.ItemInfo = null;
@@ -710,8 +735,9 @@ namespace Xamarin.Forms.DataGrid
 			FreezeRows();
 
 			var nextIndex = Items.IndexOf(group) + 1;
+			var shouldCollapse = group.Expanded;
 
-			if (group.Expanded)
+			if (shouldCollapse)
 			{
 				group.Expanded = false;
 
@@ -739,12 +765,17 @@ namespace Xamarin.Forms.DataGrid
 				info.Y = y;
 				y += info.Height;
 
-				if (info.View != null)
+
+				if (info.Y >= _lastViewEnd)
 				{
-					if (info.Y >= _lastViewEnd)
-						DetachRow(info);
-					else
+					DetachRow(info);
+				}
+				else
+				{
+					if (info.View != null)
 						info.View.SetPosition(info.View.X, info.Y);
+					// else
+					// 	AttacheRow(info);
 				}
 			}
 
