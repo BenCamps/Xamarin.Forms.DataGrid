@@ -150,7 +150,7 @@ namespace Xamarin.Forms.DataGrid
 
 		private double _lastViewStart = 0;
 		private double _lastViewEnd = 0;
-		private Queue<ItemInfo> _recycleQueue = new Queue<ItemInfo>();
+		private readonly Queue<ItemInfo> _recycleQueue = new Queue<ItemInfo>();
 
 		void ResetLastView()
 		{
@@ -162,9 +162,21 @@ namespace Xamarin.Forms.DataGrid
 		void ClearRecycleQueue()
 		{
 			//detach marked rows from previous run
-			while (_recycleQueue.Count > 0)
+			var ignoreCount = 0;
+			while (_recycleQueue.Count > ignoreCount)
 			{
-				DetachRow(_recycleQueue.Dequeue());
+				var info = _recycleQueue.Dequeue();
+
+				if (info.Start >= _lastViewEnd || info.End < _lastViewStart)
+				{
+					DetachRow(info);
+				}
+				else
+				{
+					//move item to the end
+					_recycleQueue.Enqueue(info);
+					ignoreCount++;
+				}
 			}			
 		}
 		
@@ -240,6 +252,7 @@ namespace Xamarin.Forms.DataGrid
 			else
 				ClearRecycleQueue();
 
+			FreezeRows();
 
 			if (Math.Abs(showStart - showEnd) > 0.0001)
 			{
@@ -314,6 +327,8 @@ namespace Xamarin.Forms.DataGrid
 					}
 				}
 			}
+			
+			UnfreezeRows();
 
 			//set the last view
 			_lastViewStart = windowStart;
