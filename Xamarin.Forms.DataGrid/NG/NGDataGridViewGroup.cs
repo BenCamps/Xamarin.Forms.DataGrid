@@ -80,12 +80,12 @@ namespace Xamarin.Forms.DataGrid
 			text.SetBinding(Label.FontFamilyProperty, new Binding(NGDataGrid.FontFamilyProperty.PropertyName, BindingMode.Default, source: DataGrid));
 
 			//bind text color
-			text.SetBinding(Label.TextColorProperty, new Binding(nameof(ItemForegroundColor), BindingMode.OneWay, source: this));
+			//text.SetBinding(Label.TextColorProperty, new Binding(nameof(ItemForegroundColor), BindingMode.OneWay, source: this));
 
 			View content = text;
 
 			//bind content background as row background color
-			content.BackgroundColor = ItemBackgroundColor;
+			//content.BackgroundColor = ItemBackgroundColor;
 
 			var cell = CreateCellView();
 			// cell.Column = col;
@@ -130,8 +130,8 @@ namespace Xamarin.Forms.DataGrid
 				// 	? DataGrid.SelectionColor
 				// 	: DataGrid.RowsBackgroundColorPalette.GetColor(ItemIndex, BindingContext);
 				
-				ItemBackgroundColor = DataGrid.GroupBackgroundColor;
-				ItemForegroundColor = DataGrid.GroupForegroundColor;
+				var ItemBackgroundColor = DataGrid.GroupBackgroundColor;
+				var ItemForegroundColor = DataGrid.GroupForegroundColor;
 
 
 				//CellStyle

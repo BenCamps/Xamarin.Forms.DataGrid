@@ -12,26 +12,26 @@ namespace Xamarin.Forms.DataGrid
 	internal sealed class NGDataGridViewRow : NGDataGridViewItem
 	{
 		#region Fields
-		
+
 		#endregion
 
 
 		public NGDataGridViewRow(NGDataGrid dg) : base(dg)
 		{ }
 
-		
+
 		#region properties
-		
+
 		private bool IsItemSelected => ItemInfo?.Selected ?? false;
-		
+
 		#endregion
 
-		
+
 		#region Bindable Properties
 
 		public static readonly BindableProperty RowBorderColorProperty =
 			BindableProperty.Create(nameof(RowBorderColor), typeof(Color), typeof(NGDataGridViewRow), Color.Transparent);
-		
+
 		public Color RowBorderColor
 		{
 			get => (Color)GetValue(RowBorderColorProperty);
@@ -42,16 +42,16 @@ namespace Xamarin.Forms.DataGrid
 
 
 		#region Layout
-		
+
 		protected override void LayoutChildren(double x, double y, double width, double height)
 		{
 			if (!NeedsLayout)
 				return;
 
 			SetNeedsLayout(false);
-			
+
 			base.LayoutChildren(x, y, width, height);
-			
+
 
 			Debug.WriteLine($"Row Layout {x},{y} {width},{height}");
 
@@ -69,8 +69,8 @@ namespace Xamarin.Forms.DataGrid
 			//show the grid line and adjust child layout area
 			if (showHorizontalLines)
 			{
-				cy += DataGrid.GridLineWidth;
-				ch -= DataGrid.GridLineWidth;
+				//				cy += DataGrid.GridLineWidth;
+				//				ch -= DataGrid.GridLineWidth;
 			}
 
 			foreach (View c in Children)
@@ -86,8 +86,8 @@ namespace Xamarin.Forms.DataGrid
 					var cx = x + Math.Ceiling(g.GetComputedColumnStart(colIndex));
 					var r = new Rectangle(cx, cy, cw, ch);
 
-					var gridLine = (View) cellView.Children[1];
-					
+					var gridLine = (View)cellView.Children[1];
+
 					//adjust for gridLine
 					if (colIndex == 0 || !showVerticalLines)
 					{
@@ -105,7 +105,7 @@ namespace Xamarin.Forms.DataGrid
 				}
 			}
 		}
-		
+
 		#endregion
 
 
@@ -151,7 +151,7 @@ namespace Xamarin.Forms.DataGrid
 						text.SetBinding(SKLabel.FontFamilyProperty, new Binding(NGDataGrid.FontFamilyProperty.PropertyName, BindingMode.Default, source: DataGrid));
 
 						//bind text color
-						text.SetBinding(SKLabel.TextColorProperty, new Binding(nameof(ItemForegroundColor), BindingMode.OneWay, source: this));
+						//text.SetBinding(SKLabel.TextColorProperty, new Binding(nameof(ItemForegroundColor), BindingMode.OneWay, source: this));
 
 						content = text;
 					}
@@ -169,7 +169,7 @@ namespace Xamarin.Forms.DataGrid
 						text.SetBinding(Label.FontFamilyProperty, new Binding(NGDataGrid.FontFamilyProperty.PropertyName, BindingMode.Default, source: DataGrid));
 
 						//bind text color
-						text.SetBinding(Label.TextColorProperty, new Binding(nameof(ItemForegroundColor), BindingMode.OneWay, source: this));
+						//text.SetBinding(Label.TextColorProperty, new Binding(nameof(ItemForegroundColor), BindingMode.OneWay, source: this));
 
 						content = text;
 					}
@@ -177,7 +177,7 @@ namespace Xamarin.Forms.DataGrid
 
 				//bind content background as row background color
 				// content.SetBinding(BackgroundColorProperty, new Binding(nameof(RowBackgroundColor), BindingMode.OneWay, source: this));
-				content.BackgroundColor = ItemBackgroundColor;
+				//content.BackgroundColor = ItemBackgroundColor;
 
 				var cell = CreateCellView();
 				cell.Column = col;
@@ -191,7 +191,7 @@ namespace Xamarin.Forms.DataGrid
 			//InvalidateBackground();
 		}
 
-		
+
 		private NGDataGridViewCell CreateCellView()
 		{
 			var cell = new NGDataGridViewCell();
@@ -209,7 +209,7 @@ namespace Xamarin.Forms.DataGrid
 		}
 
 
-		
+
 		protected override void OnUpdateColors()
 		{
 			// if (!updateNeeded)
@@ -217,11 +217,11 @@ namespace Xamarin.Forms.DataGrid
 
 			if (ItemIndex > -1)
 			{
-				ItemBackgroundColor = IsItemSelected
+				var ItemBackgroundColor = IsItemSelected
 					? DataGrid.SelectionColor
 					: DataGrid.RowsBackgroundColorPalette.GetColor(ItemIndex, BindingContext);
 
-				ItemForegroundColor = DataGrid.RowsTextColorPalette.GetColor(ItemIndex, BindingContext);
+				var ItemForegroundColor = DataGrid.RowsTextColorPalette.GetColor(ItemIndex, BindingContext);
 
 				//				ChangeChildrenColors();
 
@@ -266,7 +266,7 @@ namespace Xamarin.Forms.DataGrid
 				// updateNeeded = false;
 			}
 		}
-		
+
 		#endregion
 
 		#region Selection
@@ -277,7 +277,7 @@ namespace Xamarin.Forms.DataGrid
 		}
 
 		#endregion
-		
+
 	}
 
 

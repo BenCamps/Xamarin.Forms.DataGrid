@@ -76,17 +76,17 @@ namespace Xamarin.Forms.DataGrid
 			set => SetValue(ItemInfoProperty, value);
 		}
 
-		protected Color ItemBackgroundColor
-		{
-			get => (Color)GetValue(ItemBackgroundColorProperty);
-			set => SetValue(ItemBackgroundColorProperty, value);
-		}
-
-		protected Color ItemForegroundColor
-		{
-			get => (Color)GetValue(ItemForegroundColorProperty);
-			set => SetValue(ItemForegroundColorProperty, value);
-		}
+		// protected Color ItemBackgroundColor
+		// {
+		// 	get => (Color)GetValue(ItemBackgroundColorProperty);
+		// 	set => SetValue(ItemBackgroundColorProperty, value);
+		// }
+		//
+		// protected Color ItemForegroundColor
+		// {
+		// 	get => (Color)GetValue(ItemForegroundColorProperty);
+		// 	set => SetValue(ItemForegroundColorProperty, value);
+		// }
 
 
 		#endregion
@@ -96,11 +96,11 @@ namespace Xamarin.Forms.DataGrid
 			BindableProperty.Create(nameof(DataGrid), typeof(NGDataGrid), typeof(NGDataGridViewItem), null,
 				propertyChanged: (b, o, n) => ((NGDataGridViewItem)b).CreateView());
 
-		public static readonly BindableProperty ItemBackgroundColorProperty =
-			BindableProperty.Create(nameof(ItemBackgroundColor), typeof(Color), typeof(NGDataGridViewItem), Color.Transparent);
-
-		public static readonly BindableProperty ItemForegroundColorProperty =
-			BindableProperty.Create(nameof(ItemForegroundColor), typeof(Color), typeof(NGDataGridViewItem), Color.Transparent);
+		// public static readonly BindableProperty ItemBackgroundColorProperty =
+		// 	BindableProperty.Create(nameof(ItemBackgroundColor), typeof(Color), typeof(NGDataGridViewItem), Color.Transparent);
+		//
+		// public static readonly BindableProperty ItemForegroundColorProperty =
+		// 	BindableProperty.Create(nameof(ItemForegroundColor), typeof(Color), typeof(NGDataGridViewItem), Color.Transparent);
 
 		public static readonly BindableProperty ItemInfoProperty =
 			BindableProperty.Create(nameof(ItemInfo), typeof(ItemInfo), typeof(NGDataGridViewItem),
