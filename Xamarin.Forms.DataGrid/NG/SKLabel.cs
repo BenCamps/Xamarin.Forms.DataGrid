@@ -336,7 +336,6 @@ namespace Xamarin.Forms.DataGrid
 					IsAntialias = true,
 					IsAutohinted = true,
 					SubpixelText = true,
-					LcdRenderText = true,
 					Color = TextColor.ToSKColor(),
 					Typeface = Font.ToSKTypeface() ?? DefaultFont,
 					TextSize = (float) (FontSize * DisplayScale)
