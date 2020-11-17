@@ -189,16 +189,24 @@ namespace Xamarin.Forms.DataGrid
 			inLayout = false;
 		}
 
+		//only called if the grid layout is governed by children instead of parent. (Options other than FILL)
+		protected override SizeRequest OnMeasure(double widthConstraint, double heightConstraint)
+		{
+			if (heightConstraint > -1)
+			{
+				heightConstraint -= HeaderHeight;
+			}
+			
+			var sr = RefreshView.Measure(widthConstraint, heightConstraint);
+			sr.Request = new Size(sr.Request.Width, sr.Request.Height + HeaderHeight);
+			
+			return sr;
+		}
+
 		protected override void InvalidateMeasure()
 		{
 			//todo: may need to comment out base call.
 			base.InvalidateMeasure();
-		}
-
-		//only called if the grid layout is governed by children instead of parent. (Options other than FILL)
-		protected override SizeRequest OnMeasure(double widthConstraint, double heightConstraint)
-		{
-			return base.OnMeasure(widthConstraint, heightConstraint);
 		}
 
 		protected override void InvalidateLayout()
