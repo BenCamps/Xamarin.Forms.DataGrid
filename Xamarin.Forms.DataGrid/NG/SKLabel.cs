@@ -370,7 +370,7 @@ namespace Xamarin.Forms.DataGrid
 
 		public void Draw(SKCanvas canvas, SKImageInfo info)
 		{
-			if (Text == "")
+			if (String.IsNullOrEmpty(Text))
 				return;
 			
 			//measure lines if needed
