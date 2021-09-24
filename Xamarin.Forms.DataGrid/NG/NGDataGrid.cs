@@ -67,7 +67,7 @@ namespace Xamarin.Forms.DataGrid
 			InternalChildren.Add(RefreshView);
 
 
-			Container.BackgroundColor = Color.Red;//Color.Transparent,
+			Container.BackgroundColor = Color.Transparent;
 												  // Container.ItemTemplate = new DataTemplate(typeof(NGDataGridViewRow)); //DataGridRowTemplateSelector(),
 												  // Container.SelectionMode = SelectionMode.Single;
 												  // Container.ItemSizingStrategy = ItemSizingStrategy.MeasureFirstItem;

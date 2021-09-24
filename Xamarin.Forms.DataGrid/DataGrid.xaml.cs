@@ -516,7 +516,7 @@ namespace Xamarin.Forms.DataGrid
 
 			_table = new CollectionView
 			{
-				BackgroundColor = Color.Red,//Color.Transparent,
+				BackgroundColor = Color.Transparent,
 				ItemTemplate = new DataTemplate(typeof(DataGridViewRow)), //DataGridRowTemplateSelector(),
 				SelectionMode = SelectionMode.Single,
 				ItemSizingStrategy = ItemSizingStrategy.MeasureFirstItem,
